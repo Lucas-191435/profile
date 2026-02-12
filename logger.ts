@@ -1,6 +1,6 @@
 type LogFn = (...args: unknown[]) => void;
 
-const isProd = process.env.MODE === 'production'; // ajustar conforme o ambiente real
+const isProd = process.env.mode === 'production'; // ajustar conforme o ambiente real
 
 export const log: LogFn = (...args) => {
   // eslint-disable-next-line no-console
