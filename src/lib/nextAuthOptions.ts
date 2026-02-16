@@ -108,9 +108,6 @@ export const nextAuthOptions: NextAuthOptions = {
         token.name = session.user.name;
         token.role = session.user.role;
         token.apiToken = session.user.token;
-        token.isConsultantContext = session.user.isConsultantContext;
-        token.originalConsultantId = session.user.originalConsultantId;
-        token.clientId = session.user.clientId;
       }
 
       return token;
@@ -122,9 +119,6 @@ export const nextAuthOptions: NextAuthOptions = {
         name: token.name as string,
         role: token.role as any,
         token: token.apiToken as string,
-        isConsultantContext: token.isConsultantContext as boolean,
-        originalConsultantId: token.originalConsultantId as string,
-        clientId: token.clientId as string,
       };
       session.token = token.apiToken as string;
       return session;

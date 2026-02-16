@@ -133,7 +133,6 @@ const useAuth = () => {
     visible,
     setVisible,
     logout,
-    register,
     handleSubmit,
     handleLogin,
   };

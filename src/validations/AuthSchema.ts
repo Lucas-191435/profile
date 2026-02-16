@@ -6,5 +6,4 @@ export const authSchema = yup.object().shape({
     .string()
     .required("Senha é obrigatório.")
     .min(6, "A senha deve conter no mínimo 6 caracteres"),
-  rememberMe: yup.boolean().required(),
 });
