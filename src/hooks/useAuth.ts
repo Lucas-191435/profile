@@ -48,13 +48,6 @@ const useAuth = () => {
 
       // Define rotas permitidas para cada tipo de usuário
       const isInValidRoute =
-        (role === "ADMIN" && pathname.startsWith("/admin")) ||
-        (role === "FRANCHISE" &&
-          (pathname.startsWith("/franchise") ||
-            pathname.startsWith("/client"))) ||
-        (role === "MASTER_COACH" &&
-          (pathname.startsWith("/master-coach") ||
-            pathname.startsWith("/client"))) ||
         (role === "CONSULTANT" &&
           (pathname.startsWith("/consultant") ||
             pathname.startsWith("/client"))) ||
@@ -62,13 +55,7 @@ const useAuth = () => {
 
       // Redireciona apenas se não estiver em uma rota válida
       if (!isInValidRoute) {
-        if (role === "ADMIN") {
-          replace("/admin/franchises");
-        } else if (role === "FRANCHISE") {
-          replace("/franchise/dashboard");
-        } else if (role === "MASTER_COACH") {
-          replace("/master-coach/dashboard");
-        } else if (role === "CONSULTANT") {
+        if (role === "CONSULTANT") {
           replace(PrivateRoutes.consultant.clients);
         } else if (role === "CLIENT") {
           replace(PrivateRoutes.client.dashboard);

@@ -1,25 +1,48 @@
 "use client"
 
-import Image from "next/image";
 import { log } from "../../logger";
 import { toast } from "sonner"
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { InferType } from "yup";
 import { api } from "@/services/api";
+import MoneyInput from "@/components/inputs/money-input";
+import PhoneInput from "@/components/inputs/phone-input";
+import CpfCnpjInput from "@/components/inputs/cpf-cnpj-input";
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
+  amount: yup.number().min(0, "Amount must be non-negative").required("Amount is required"),
+  phone: yup.string().required("Phone is required").min(10, "Phone must be at least 10 digits").max(11, "Phone must be at most 11 digits"),
+  document: yup.string().required("Document is required"),
 });
 type FormData = InferType<typeof schema>;
 export default function Home() {
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: yupResolver(schema)
+  const form = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      name: "22",
+      email: "222222",
+      amount: 200,
+      phone: "1111111",
+      document: "50463750870",
+    }
   });
 
+  const {formState: {errors}} = form;
+  console.log("Form errors:", errors); // Log para verificar erros de validação
   const submit = async (data: FormData) => {
+    log("Submitting form with data:", data);
     const {request} = api.get("");
     const response = await request;
     log("Vendo response",response);
@@ -28,32 +51,70 @@ export default function Home() {
   log("Home page rendered"); // exemplo de log para desenvolvimento
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <form onSubmit={handleSubmit(submit)} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Name</label>
-          <input
-            {...register("name")}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(submit)} className="w-full max-w-sm space-y-6">
+          <FormField 
+            control={form.control}
+            name="name"
+            render={({field}) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <input
+                    {...field}
+                    className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your name"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
-          <input
-            {...register("email")}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          <FormField 
+            control={form.control}
+            name="email"
+            render={({field}) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <input
+                    {...field}
+                    className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your email"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
-        </div>
-        <div>
+          <MoneyInput
+            form={form}
+            name="amount"
+            label="Amount"
+            placeholder="Enter amount"
+          />
+
+          <PhoneInput
+            form={form}
+            name="phone"
+            label="Phone"
+            placeholder="Enter phone number"
+          />
+
+          <CpfCnpjInput
+            form={form}
+            name="document"
+            label="Document"
+            placeholder="Enter document"
+          />
           <button
             type="submit"
-            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+            className="w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            Show Toast
+            Submit
           </button>
-        </div>
-      </form>
+        </form>   
+      </Form>
     </div>
   );
 }
