@@ -5,5 +5,5 @@ export const authSchema = yup.object().shape({
   password: yup
     .string()
     .required("Senha é obrigatório.")
-    .min(6, "A senha deve conter no mínimo 6 caracteres"),
+    .min(3, "A senha deve conter no mínimo 6 caracteres"),
 });
