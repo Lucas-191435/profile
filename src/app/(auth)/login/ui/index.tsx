@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/form";
 import { log } from "../../../../../logger";
 import {
-  useRouter,
-  usePathname,
+    useRouter,
 } from "next/navigation";
 const LoginComponentPage = () => {
+
     const router = useRouter();
 
     const form = useForm(
@@ -35,7 +35,7 @@ const LoginComponentPage = () => {
     const { handleLogin } = useAuth();
 
     const handleResetPassword = () => {
-        router.push("/reset-password");
+        router.push("/forgot-password");
     }
     return (
         <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -83,14 +83,14 @@ const LoginComponentPage = () => {
                         Login
                     </button>
                     <button
-                onClick={handleResetPassword}
-                className="mt-4 text-sm text-blue-500 hover:underline"
-            >
-                Esqueceu a senha?
-            </button>
+                        onClick={handleResetPassword}
+                        className="mt-4 text-sm text-blue-500 hover:underline"
+                    >
+                        Esqueceu a senha?
+                    </button>
                 </form>
             </Form>
-            
+
         </div>
     )
 }

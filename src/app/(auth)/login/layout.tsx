@@ -2,18 +2,18 @@ import { nextAuthOptions } from "@/lib/nextAuthOptions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
-const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
+const LoginLayout = async ({ children }: { children: React.ReactNode }) => {
   const session = await getServerSession(nextAuthOptions);
 
-  if (!session) {
-    redirect("/login");
+  if (session) {
+    redirect("/client");
   }
   return (
     <div>
-      <h1>Admin Layout</h1>
+      <h1>Login Layout</h1>
       {children}
     </div>
   );
 }
 
-export default AdminLayout;
+export default LoginLayout;

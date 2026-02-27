@@ -18,6 +18,7 @@ import { api } from "@/services/api";
 import MoneyInput from "@/components/inputs/money-input";
 import PhoneInput from "@/components/inputs/phone-input";
 import CpfCnpjInput from "@/components/inputs/cpf-cnpj-input";
+import { redirect } from "next/navigation";
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -27,7 +28,11 @@ const schema = yup.object().shape({
   document: yup.string().required("Document is required"),
 });
 type FormData = InferType<typeof schema>;
-export default function Home() {
+export default async function Home() {
+
+  
+      redirect("/login");
+      
   const form = useForm({
     resolver: yupResolver(schema),
     defaultValues: {

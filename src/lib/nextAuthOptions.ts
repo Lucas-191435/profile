@@ -6,7 +6,7 @@ import Credentials from "next-auth/providers/credentials";
 import { redirect } from "next/navigation";
 
 export const nextAuthOptions: NextAuthOptions = {
-  debug: true,
+  // debug: true, // Remove debug mode to avoid warnings
   providers: [
     Credentials({
       name: "credentials",
@@ -17,7 +17,11 @@ export const nextAuthOptions: NextAuthOptions = {
 
       async authorize(credentials, req) {
         try {
-          const response = await axios.post<{ user: IUser; token: string }>(
+          const response = await axios.post<{ 
+            data: IUser; 
+            token: string; 
+            message: string;
+          }>(
             process.env.baseUrl + "/auth/login",
             {
               email: credentials?.email,
@@ -31,19 +35,15 @@ export const nextAuthOptions: NextAuthOptions = {
               },
             },
           );
-          const { user } = response.data || {};
+
+          console.log("Login response:", response.data);
+          const { data: user } = response.data || {};
 
           if (user && response.status === 200) {
             return {
               ...user,
               token: response.data.token,
             };
-          }
-
-          if (user?.role === "CLIENT") {
-            redirect(PrivateRoutes.client.dashboard);
-          } else if (user?.role === "CONSULTANT") {
-            redirect(PrivateRoutes.consultant.dashboard);
           }
 
           return null;
@@ -68,6 +68,10 @@ export const nextAuthOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 60 * 60 * 24, // 24 horas
     updateAge: 60 * 60, // 1 hora
+  },
+
+  jwt: {
+    maxAge: 60 * 60 * 24, // 24 horas
   },
 
   cookies: {

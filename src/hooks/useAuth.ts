@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { PrivateRoutes, PublicRoutes } from "@/constants/mapperRoutes";
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { authSchema } from "@/validations/AuthSchema";
+import { authSchema, ForgotPasswordSchemaType, ResetPasswordSchemaType } from "@/validations/AuthSchema";
 import { errorToast, successToast } from "@/utils/toasts";
 
 
@@ -103,12 +103,44 @@ const useAuth = () => {
           errorToast({ description: "Credenciais inválidas !" });
         }
       } else {
+        replace("/client");
         successToast({ description: "Login efetuado com sucesso !" });
         api.clearSessionCache();
         queryClient.clear();
         verifyUserAuth();
 
       }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleForgotPassword: SubmitHandler<ForgotPasswordSchemaType> = async (data) => {
+    try {
+      const { email } = data;
+      console.log("Forgot password data:", { email  });
+
+      const { request } = api.post("/auth/resetPassword", { email });
+      const result = await request;
+
+      console.log("Reset password result:", result.data.data);
+
+      replace("/reset-password?token=" + result.data.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleResetPassword: SubmitHandler<ResetPasswordSchemaType> = async (data) => {
+    try {
+      const { token, password } = data;
+      console.log("Reset password data:", { token, password });
+
+      const { request } = api.post("/auth/validateTokenForResetPassword", data);
+      const result = await request;
+
+   
+      replace("/login");
     } catch (err) {
       console.error(err);
     }
@@ -135,6 +167,8 @@ const useAuth = () => {
     logout,
     handleSubmit,
     handleLogin,
+    handleForgotPassword,
+    handleResetPassword
   };
 };
 
