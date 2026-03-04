@@ -1,0 +1,91 @@
+/* ===== CUSTOM UTILITIES ===== */
+
+.glass {
+  @apply backdrop-blur-sm bg-white/10 border border-white/20;
+}
+
+.glass-dark {
+  @apply backdrop-blur-sm bg-black/10 border border-white/10;
+}
+
+.scrollbar-premium {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(156 163 175 / 0.5) transparent;
+}
+
+.scrollbar-premium::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-premium::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-premium::-webkit-scrollbar-thumb {
+  background: rgb(156 163 175 / 0.5);
+  border-radius: 20px;
+}
+
+.scrollbar-premium::-webkit-scrollbar-thumb:hover {
+  background: rgb(156 163 175 / 0.7);
+}
+
+/* ===== POKEMON THEMED GRADIENTS ===== */
+.gradient-fire {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+}
+
+.gradient-water {
+  background: linear-gradient(135deg, #4fc3f7 0%, #1976d2 100%);
+}
+
+.gradient-grass {
+  background: linear-gradient(135deg, #66bb6a 0%, #2e7d32 100%);
+}
+
+.gradient-electric {
+  background: linear-gradient(135deg, #ffeb3b 0%, #ff9800 100%);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-2px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(2px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}

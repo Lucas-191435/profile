@@ -1,6 +1,6 @@
 import { ContentWrapper } from "@/components/layout/ContentWrapper";
 
-import Sidebar from "@/components/sidebar";
+import {Sidebar} from "@/components/sidebar/sidebar-client";
 import { SidebarCollapseProvider } from "@/hooks/useSidebarCollapse";
 import { nextAuthOptions } from "@/lib/nextAuthOptions";
 import { getServerSession } from "next-auth";
