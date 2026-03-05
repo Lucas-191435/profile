@@ -6,7 +6,7 @@ import { useGetPokemons } from "@/services/queries/usePokemon";
 const ClientHomePage = () => {
   const {logout} = useAuth();
   const { data: pokemons } = useGetPokemons();
-  console.log("pokemons", pokemons);
+  // console.log("pokemons", pokemons);
   return (
     <ContainerSidebar>
         <h1>Client Home Page1</h1>
