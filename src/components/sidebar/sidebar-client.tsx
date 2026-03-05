@@ -9,6 +9,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Menu,
+  LogOut,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -19,6 +20,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Suspense, useState } from "react";
+import { signOut } from "next-auth/react";
 
 interface NavItem {
   label: string;
@@ -28,10 +30,10 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { label: "Home", icon: Home, path: "/client" },
-  { label: "Meu Pokémon", icon: Heart, path: "/client/routine" }, // TODO: missing page
-  { label: "Meu Perfil", icon: Calendar, path: "/client/planning" },
-  { label: "Itens", icon: Mailbox, path: "/client/budget" },
-  { label: "Regiões", icon: Map, path: "/client/budget" },
+  { label: "Meu Pokémon", icon: Heart, path: "/client/my-pokemon" },
+  { label: "Meu Perfil", icon: Calendar, path: "/client/profile" },
+  { label: "Itens", icon: Mailbox, path: "/client/itens" },
+  { label: "Regiões", icon: Map, path: "/client/regions" },
 ];
 
 
@@ -107,7 +109,7 @@ function SidebarContent({
                   collapsed && "justify-center px-3",
                 )}
               >
-                {isActive && (
+                {!collapsed && isActive && (
                   <span className={cn(
                     "absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary shadow-lg shadow-primary/50",
                     "animate-pulse"
@@ -152,6 +154,32 @@ function SidebarContent({
           </div>
         )}
       </nav>
+      
+      {/* Botão de Logout */}
+      <div className="p-3 border-t border-sidebar-border">
+        <button
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className={cn(
+            "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-300 group w-full",
+            "text-sidebar-foreground/70 hover:bg-red-500/20 hover:text-red-400",
+            "hover:shadow-md hover:shadow-red-500/10 hover:border-red-500/20",
+            collapsed && "justify-center px-3",
+          )}
+        >
+          <LogOut
+            className={cn(
+              "h-5 w-5 flex-shrink-0 transition-all duration-300",
+              "group-hover:scale-110 group-hover:text-red-400"
+            )}
+          />
+          
+          {!collapsed && (
+            <span className="flex-1 transition-all duration-300">
+              Sair
+            </span>
+          )}
+        </button>
+      </div>
     </>
   )
 }
