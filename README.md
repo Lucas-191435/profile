@@ -10,9 +10,6 @@ Uma aplicação web completa desenvolvida com Next.js que combina sistema de aut
 - **Criação de Contas** para novos usuários
 - **Sistema de Roles** com diferentes níveis de acesso:
   - **Client** - Usuários padrão
-  - **Consultant** - Consultores/Coaches
-  - **Master Coach** - Coaches mestres
-  - **Franchise** - Franqueados
   - **Admin** - Administradores
 
 ### Área do Cliente
