@@ -17,9 +17,10 @@ import {
 import { log } from "../../../../../logger";
 import {
   useRouter,
-useSearchParams,
+  useSearchParams,
 } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 const ResetPasswordComponentPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,11 +40,11 @@ const ResetPasswordComponentPage = () => {
 
 
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black border border-red-400">
-      <h1>{token}</h1>
+    <div className="flex bg-background flex-col min-h-screen items-center justify-center font-sans ">
+      {/* <h1>{token}</h1> */}
       <div className="w-full max-w-sm mb-6">
         <Button variant="ghost" size="sm" onClick={() => router.push("/login")} className="mb-4">
-          <MoveLeft className="inline-block mr-1" color="black" size={16} />
+          <MoveLeft className="inline-block mr-1" color="white" size={16} />
         </Button>
       </div>
       <Form {...form}>
@@ -87,7 +88,15 @@ const ResetPasswordComponentPage = () => {
           />
           <button
             type="submit"
-            className="w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={cn(
+              "relative w-full rounded px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent transition-colors duration-500",
+              [
+                "bg-sidebar-accent text-sidebar-foreground shadow-lg shadow-primary/20",
+                "border border-primary/30 font-semibold",
+                "hover:cursor-pointer",
+                "hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/20",
+              ],
+            )}
           >
             Login
           </button>

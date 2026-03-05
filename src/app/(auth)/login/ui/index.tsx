@@ -17,6 +17,7 @@ import { log } from "../../../../../logger";
 import {
     useRouter,
 } from "next/navigation";
+import { cn } from "@/lib/utils";
 const LoginComponentPage = () => {
 
     const router = useRouter();
@@ -38,15 +39,15 @@ const LoginComponentPage = () => {
         router.push("/forgot-password");
     }
     return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+        <div className="flex min-h-screen items-center justify-center font-sans bg-background">
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleLogin)} className="w-full max-w-sm space-y-6">
+                <form onSubmit={form.handleSubmit(handleLogin)} className="w-full max-w-sm space-y-6 ">
                     <FormField
                         control={form.control}
                         name="email"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Email</FormLabel>
+                                <FormLabel className="text-foreground">Email</FormLabel>
                                 <FormControl>
                                     <input
                                         {...field}
@@ -63,7 +64,7 @@ const LoginComponentPage = () => {
                         name="password"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Password</FormLabel>
+                                <FormLabel className="text-foreground">Password</FormLabel>
                                 <FormControl>
                                     <input
                                         {...field}
@@ -78,13 +79,21 @@ const LoginComponentPage = () => {
                     />
                     <button
                         type="submit"
-                        className="w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className={cn(
+                            "relative w-full rounded px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent transition-colors duration-500",
+                            [
+                                "bg-sidebar-accent text-sidebar-foreground shadow-lg shadow-primary/20",
+                                "border border-primary/30 font-semibold",
+                                "hover:cursor-pointer",
+                                "hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/20",
+                            ],
+                        )}
                     >
                         Login
                     </button>
                     <button
                         onClick={handleResetPassword}
-                        className="mt-4 text-sm text-blue-500 hover:underline"
+                        className="mt-4 text-sm text-blue-500 hover:underline hover:cursor-pointer"
                     >
                         Esqueceu a senha?
                     </button>
