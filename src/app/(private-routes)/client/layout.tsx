@@ -12,18 +12,16 @@ const ClientLayout = async ({ children }: { children: React.ReactNode }) => {
   if (!session) {
     redirect("/login");
   }
+  
   return (
-    <div>
-      <h1>Client Layout</h1>
-      <div className="flex-row w-full" style={{borderWidth: 1, borderColor: 'red'}}>
+    // <main>
         <SidebarCollapseProvider>
         <Sidebar />
           <ContentWrapper>
           {children}
         </ContentWrapper>
         </SidebarCollapseProvider>
-      </div>
-    </div>
+      // </main>
   );
 }
 

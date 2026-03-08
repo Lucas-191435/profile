@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Suspense, useState } from "react";
 import { signOut } from "next-auth/react";
+import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
 
 interface NavItem {
   label: string;
@@ -186,7 +187,7 @@ function SidebarContent({
 
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const { isCollapsed, toggleCollapse } = useSidebarCollapse();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -229,13 +230,13 @@ export function Sidebar() {
       <aside
         className={cn(
           "fixed left-0 top-0 z-40 flex h-screen flex-col transition-all duration-300 ease-spring bg-sidebar text-sidebar-foreground",
-          collapsed ? "w-20" : "w-64",
+          isCollapsed ? "w-20" : "w-64",
         )}
         style={{
          
         }}
       >
-        <SidebarContent collapsed={collapsed} setCollapsed={setCollapsed} />
+        <SidebarContent collapsed={isCollapsed} setCollapsed={toggleCollapse} />
       </aside>
     </Suspense>
   );
