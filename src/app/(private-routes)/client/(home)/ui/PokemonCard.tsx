@@ -3,7 +3,7 @@ const PokemonCard = ({ pokemon }: { pokemon: any }) => {
         <div className="flex justify-center flex-col">
             
             <img src={pokemon.img2} alt={pokemon.name} />
-            <h2>{pokemon.name}</h2>
+            <h2 className="text-center">{pokemon.name}</h2>
         </div>
     )
 }
