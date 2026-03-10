@@ -34,11 +34,14 @@ const PaginationControls = () => {
   };
 
   return (
-    <>
+    <div className="flex flex-col items-center justify-center ">
+    <div className="flex items-center justify-between mt-4 gap-3">
       <Button onClick={handlePreviousPage} disabled={page === 1}>Previous</Button>
       <Button onClick={handleNextPage}>Next</Button>
+    </div>
       <h1>{pokemons?.count}</h1>
-    </>
+
+    </div>
   );
 };
 

@@ -1,32 +1,43 @@
 import React, { createContext, useContext, useState } from "react";
 import { useGetPokemons } from "@/services/queries/usePokemon";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // Define the shape of the context
 interface PokemonContextType {
     page: number;
     setPage: React.Dispatch<React.SetStateAction<number>>;
     querySearch: string;
-    setQuerySearch: React.Dispatch<React.SetStateAction<string>>;
-    pokemons: any; // Replace `any` with the correct type if available
+    pokemons: any; 
+    isLoading: boolean;
+    error: any; 
+    handleSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-// Create the context
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined);
 
-// Create a provider component
 export const PokemonProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [page, setPage] = useState(1);
     const pageSize = 20;
     const [querySearch, setQuerySearch] = useState("");
-    const { data: pokemons } = useGetPokemons({ page, pageSize, query: querySearch });
+    const debouncedSearch = useDebounce(querySearch, 500);
+    const { data: pokemons, isLoading, error } = useGetPokemons({ page, pageSize, query: debouncedSearch });
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setQuerySearch(e.target.value);
+        if (page !== 1) {
+            setPage(1);
+        }
+    }
 
     return (
         <PokemonContext.Provider value={{
             page,
             setPage,
             querySearch,
-            setQuerySearch,
-            pokemons
+            handleSearchChange,
+            pokemons,
+            isLoading,
+            error
         }}>
             {children}
         </PokemonContext.Provider>
