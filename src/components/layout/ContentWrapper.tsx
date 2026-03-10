@@ -6,7 +6,7 @@ import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
 
 export function ContentWrapper({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
-  const { isCollapsed, toggleCollapse } = useSidebarCollapse();
+  const { isCollapsed } = useSidebarCollapse();
 
   if (isMobile) {
     return <>{children}</>;
@@ -15,7 +15,7 @@ export function ContentWrapper({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={cn(
-        "transition-all duration-300 ease-spring w-full",
+        "transition-all duration-300 ease-spring w-full  mx-auto p-4",
         isCollapsed ? "md:ml-20 md:w-[calc(100%-5rem)]" : "md:ml-64 md:w-[calc(100%-16rem)]"
       )}
     >

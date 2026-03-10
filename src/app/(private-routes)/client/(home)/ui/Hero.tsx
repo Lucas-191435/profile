@@ -3,7 +3,7 @@ import mascotImage from "@/assets/images/hero-pokedex.png";
 
 const Hero = () => {
     return (
-        <section className="relative rounded-2xl overflow-hidden w-full h-64 lg:h-80 object-cover glow-red-strong">
+        <section className="relative rounded-2xl overflow-hidden w-full max-w-[1400px] mx-auto h-64 lg:h-80 object-cover glow-red-strong">
             <Image
                 src={mascotImage}
                 alt="Pokédex"

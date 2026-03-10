@@ -1,18 +1,45 @@
 'use client';
 import ContainerSidebar from "@/components/shared/ContainerSidebar";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import { useGetPokemons } from "@/services/queries/usePokemon";
 import Hero from "./ui/Hero";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import Filter from "./ui/Filters";
+import { PokemonProvider, usePokemonContext } from "@/context/PokemonContext";
+import PokemonGrid from "./ui/PokemonGrid";
 const ClientHomePage = () => {
-  const {logout} = useAuth();
-  const { data: pokemons } = useGetPokemons();
-  // console.log("pokemons", pokemons);
   return (
-    <ContainerSidebar>
+    <PokemonProvider>
+      <ContainerSidebar className="space-y-6">
         <Hero />
-    </ContainerSidebar>
+        <Filter />
+        <PokemonGrid />
+        <PaginationControls />
+      </ContainerSidebar>
+    </PokemonProvider>
   );
-}
+};
+
+const PaginationControls = () => {
+  const { page, setPage, pokemons } = usePokemonContext();
+
+  const handleNextPage = () => {
+    if (pokemons?.count && page < Math.ceil(pokemons.count / 20)) {
+      setPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    setPage((prevPage) => Math.max(prevPage - 1, 1));
+  };
+
+  return (
+    <>
+      <Button onClick={handlePreviousPage} disabled={page === 1}>Previous</Button>
+      <Button onClick={handleNextPage}>Next</Button>
+      <h1>{pokemons?.count}</h1>
+    </>
+  );
+};
 
 export default ClientHomePage;
