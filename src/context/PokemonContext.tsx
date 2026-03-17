@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState } from "react";
 import { useGetPokemons } from "@/services/queries/usePokemon";
 import { useDebounce } from "@/hooks/useDebounce";
+import { IGetPokemons } from "@/services/dto/IUsePokemon";
 
 // Define the shape of the context
 interface PokemonContextType {
     page: number;
     setPage: React.Dispatch<React.SetStateAction<number>>;
     querySearch: string;
-    pokemons: any; 
+    pokemons: IGetPokemons | undefined; 
     isLoading: boolean;
     error: any; 
     handleSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -17,7 +18,7 @@ const PokemonContext = createContext<PokemonContextType | undefined>(undefined);
 
 export const PokemonProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [page, setPage] = useState(1);
-    const pageSize = 20;
+    const pageSize = 24;
     const [querySearch, setQuerySearch] = useState("");
     const debouncedSearch = useDebounce(querySearch, 500);
     const { data: pokemons, isLoading, error } = useGetPokemons({ page, pageSize, query: debouncedSearch });

@@ -28,7 +28,7 @@ export const useGetPokemons = (params: UseGetPokemonsParams) => {
                 query: params.query || "",
                 types: params.types ? params.types.join(",") : ""
             });
-            const response = await api.get(`/pokemon?${queryString.toString()}`).request;
+            const response: { data: { data: IGetPokemons } } = await api.get(`/pokemon?${queryString.toString()}`).request;
             return response.data.data;
         },
         staleTime: Infinity, // Dados nunca ficam obsoletos
