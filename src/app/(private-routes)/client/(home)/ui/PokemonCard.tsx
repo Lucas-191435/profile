@@ -31,13 +31,15 @@ const PokemonCard = ({ pokemon }: PokemonCardProps) => {
                         ))}
                     </div>
                 </div>
-                <div className="flex justify-center py-4 relative h-60 sm:h-30 md:w-30 md:h-40 md:w-40 lg:h-50 lg:w-50">
+                <div className="flex justify-center items-center py-4 h-48 sm:h-40 md:h-44 lg:h-48 overflow-hidden">
                     <Image
                         src={pokemon.img3}
                         alt={`Imagem de ${pokemon.name}`}
-                        layout="fill"
-                        objectFit="cover"
-                        className=" object-contain group-hover:animate-float transition-transform drop-shadow-lg"
+                        width={200}
+                        height={200}
+                        priority
+                         className="w-auto h-full max-w-full max-h-full min-w-[120px] min-h-[120px] object-contain group-hover:animate-float transition-transform duration-500 drop-shadow-lg opacity-0 scale-95"
+                        onLoadingComplete={(img) => img.classList.add("opacity-100", "scale-100")}
                     />
                 </div>
                 <h3 className="text-center font-display text-sm font-semibold capitalize tracking-wide">{pokemon.name}</h3>

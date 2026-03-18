@@ -1,14 +1,21 @@
 import { usePokemonContext } from "@/context/PokemonContext";
 import PokemonCard from "./PokemonCard";
+import SkeletonCard from "../components/SkeletonCard";
 
 const PokemonGrid = () => {
     const { pokemons, isLoading } = usePokemonContext();
     if (isLoading) {
-        return  <div className="grid grid-cols-4 min-h-[1400px]">Loading...</div>;
+        return (
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 min-h-[1200px]">
+                {Array.from({ length: 24 }).map((_, index) => (
+                    <SkeletonCard key={index} />
+                ))}
+            </div>
+        );
     }
     console.log(pokemons);
     return (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 min-h-[1200px]">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 min-h-[1200px]">
             {pokemons?.pokemon.map(( pokemon ) => (
                 <PokemonCard key={pokemon.number} pokemon={pokemon} />
             ))}
