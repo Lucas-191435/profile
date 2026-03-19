@@ -13,7 +13,8 @@ export interface IPokemon {
 
 
 interface PokemonDescription {
-  [gameName: string]: string; 
+  version: string,
+  description: string;
 }
 
 interface EvolutionChainItem {
@@ -41,7 +42,7 @@ export interface IPokemonComplete {
   height: number;
   weight: number;
   img1: string;
-  img2: string; 
+  img2: string;
   img3: string;
   descriptions: PokemonDescription[];
   evolutionChain: EvolutionChainItem[];

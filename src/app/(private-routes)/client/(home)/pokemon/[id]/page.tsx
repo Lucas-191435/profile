@@ -4,7 +4,12 @@ import { useFindUniquePokemon } from "@/services/queries/usePokemon";
 
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import {MoveLeft} from 'lucide-react'
+import { MoveLeft } from 'lucide-react'
+import Description from './ui/Description';
+import { Separator } from '@/components/ui/separator';
+import Variations from './ui/Variations';
+import Status from './ui/Status';
+import Evolutions from './ui/Evolutions';
 
 const PokemonPage = () => {
   const params = useParams();
@@ -14,15 +19,30 @@ const PokemonPage = () => {
   const { data, isLoading, error } = useFindUniquePokemon({ id: parseInt(id) });
 
   if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error loading Pokemon</div>;
+  if (error || !data) return <div>Error loading Pokemon</div>;
+
+
 
   return (
-    <div>
-      <Button variant="outline" onClick={() => router.back()}>
+    <div className='px-8 md:px-12 py-6 space-y-4'>
+      <Button variant="ghost" onClick={() => router.push('/client')}>
         <MoveLeft className="mr-2" />
         Back to Pokemon List
       </Button>
-      <h1>Pokemon Name: {data?.name}</h1>
+
+      <Description pokemon={data} />
+
+      <Separator className="border-border" />
+
+      <Status pokemon={data} />
+
+      <Separator className="border-border" />
+
+      <Variations pokemon={data} />
+
+      <Separator className="border-border" />
+
+      <Evolutions pokemon={data} />
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 
 const ClientLayout = async ({ children }: { children: React.ReactNode }) => {
   const session = await getServerSession(nextAuthOptions);
-
+  console.log("Session in ClientLayout:", session);
   if (!session) {
     redirect("/login");
   }
