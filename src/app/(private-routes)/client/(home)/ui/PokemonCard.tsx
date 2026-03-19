@@ -19,7 +19,7 @@ const typeColors: Record<string, string> = {
 const PokemonCard = ({ pokemon }: PokemonCardProps) => {
 
     return (
-        <Link href={`/pokemon/${pokemon.number}`} className="block">
+        <Link href={`/client/pokemon/${pokemon.number}`} className="block">
             <div className="card-pokemon group cursor-pointer ">
                 <div className="flex justify-between items-start mb-2">
                     <span className="text-muted-foreground font-display text-xs font-semibold">#{pokemon.number.toString().padStart(3, "0")}</span>

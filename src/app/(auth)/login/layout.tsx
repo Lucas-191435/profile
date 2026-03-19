@@ -9,7 +9,7 @@ const LoginLayout = async ({ children }: { children: React.ReactNode }) => {
     redirect("/client");
   }
   return (
-    <div className="bg-black">
+    <div>
       {children}
     </div>
   );

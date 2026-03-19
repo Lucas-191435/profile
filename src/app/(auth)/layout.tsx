@@ -1,7 +1,7 @@
 const AuthLayout = async({ children }: { children: React.ReactNode }) => {
 
   return (
-    <div>
+    <div className="px-6">
         {children}
     </div>
   );

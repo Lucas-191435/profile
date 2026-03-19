@@ -10,3 +10,42 @@ export interface IPokemon {
   img2: string; // URL da segunda imagem
   img3: string; // URL da terceira imagem
 };
+
+
+interface PokemonDescription {
+  [gameName: string]: string; 
+}
+
+interface EvolutionChainItem {
+  name: string;
+  id: number;
+  level: number | null;
+}
+
+interface PokemonSprite {
+  label: string;
+  url: string;
+}
+
+interface PokemonStat {
+  name: string;
+  value: number;
+}
+
+export interface IPokemonComplete {
+  number: number;
+  name: string;
+  types: string[];
+  abilities: string[];
+  region: string;
+  height: number;
+  weight: number;
+  img1: string;
+  img2: string; 
+  img3: string;
+  descriptions: PokemonDescription[];
+  evolutionChain: EvolutionChainItem[];
+  sprites: PokemonSprite[];
+  regions: string[];
+  stats: PokemonStat[];
+}
