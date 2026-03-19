@@ -53,7 +53,7 @@ function SidebarContent({
     <>
       <div
         className={cn(
-          "flex items-center border-b border-sidebar-border p-6 bg-gradient-to-r from-sidebar-background to-sidebar-accent/20",
+          "flex items-center max-h-[81px] border-b border-sidebar-border p-6 bg-gradient-to-r from-sidebar-background to-sidebar-accent/20",
           collapsed ? "justify-center " : "justify-between",
         )}
       >

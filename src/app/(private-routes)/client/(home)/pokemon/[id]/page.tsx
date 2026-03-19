@@ -1,12 +1,15 @@
 'use client';
 import { useParams } from 'next/navigation';
 import { useFindUniquePokemon } from "@/services/queries/usePokemon";
-import Link from 'next/link';
 
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import {MoveLeft} from 'lucide-react'
 
 const PokemonPage = () => {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
 
   const { data, isLoading, error } = useFindUniquePokemon({ id: parseInt(id) });
 
@@ -15,9 +18,10 @@ const PokemonPage = () => {
 
   return (
     <div>
-      <Link href={`/client`} className="text-sm text-blue-500 hover:underline mb-4 inline-block">
-        &larr; Back to Pokemon List
-      </Link>
+      <Button variant="outline" onClick={() => router.back()}>
+        <MoveLeft className="mr-2" />
+        Back to Pokemon List
+      </Button>
       <h1>Pokemon Name: {data?.name}</h1>
     </div>
   );
