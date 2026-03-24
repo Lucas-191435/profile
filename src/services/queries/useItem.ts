@@ -2,9 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { IGetPokemons } from "../dto/IUsePokemon";
 import { IPokemonComplete } from "@/types/IPokemon";
+import { IGetItems } from "../dto/IUseItem";
 
 
-type UseGetPokemonsParams = {
+type UseGetItemParams = {
     page?: number;
     pageSize?: number;
     type?: string;
@@ -12,9 +13,9 @@ type UseGetPokemonsParams = {
     query?: string;
     types?: string[];
 };
-export const useGetPokemons = (params: UseGetPokemonsParams) => {
+export const useGetItems = (params: UseGetItemParams) => {
     return useQuery({
-        queryKey: ["get-pokemons", {
+        queryKey: ["get-items", {
             page: params.page,
             pageSize: params.pageSize,
             type: params.type,
@@ -22,14 +23,14 @@ export const useGetPokemons = (params: UseGetPokemonsParams) => {
             query: params.query,
             types: params.types
         }],
-        queryFn: async (): Promise<IGetPokemons> => {
+        queryFn: async (): Promise<IGetItems> => {
             const queryString = new URLSearchParams({
                 page: params.page?.toString() || "1",
                 pageSize: params.pageSize?.toString() || "20",
                 query: params.query || "",
                 types: params.types ? params.types.join(",") : ""
             });
-            const response: { data: { data: IGetPokemons } } = await api.get(`/pokemon?${queryString.toString()}`).request;
+            const response: { data: { data: IGetItems } } = await api.get(`/items?${queryString.toString()}`).request;
             return response.data.data;
         },
         staleTime: Infinity, // Dados nunca ficam obsoletos
@@ -39,22 +40,3 @@ export const useGetPokemons = (params: UseGetPokemonsParams) => {
     });
 };
 
-type UseFindUniquePokemonParams = {
-    id?: number;
-
-};
-export const useFindUniquePokemon = (params: UseFindUniquePokemonParams) => {
-    return useQuery({
-        queryKey: ["unique-pokemon", {
-            id: params.id
-        }],
-        queryFn: async (): Promise<IPokemonComplete> => {
-            const response: { data: { data: IPokemonComplete } } = await api.get(`/pokemon/${params.id}`).request;
-            return response.data.data;
-        },
-        staleTime: Infinity, // Dados nunca ficam obsoletos
-        enabled: true, // Always enabled to fetch data on mount
-        refetchOnMount: false,
-        refetchOnWindowFocus: false
-    });
-};

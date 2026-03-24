@@ -8,13 +8,8 @@ const PublicRoutes = {
 
 const PrivateRoutes = {
   client: {
-    dashboard: "/client",
-    extract: "/client/extract",
-    goals: "/client/goals",
-    planning: "/client/planning",
-    heritage: "/client/heritage",
-    future: "/client/future",
-    syncAccounts: "/client/sync-accounts",
+    dashboard: "/client", 
+    pokemonDetail: "/client/pokemon/[id]",
   },
   consultant: {
     clients: "/consultant",
