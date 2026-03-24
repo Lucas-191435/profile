@@ -8,12 +8,15 @@ import FiltersItems from "./ui/FiltersItems";
 import { useState } from "react";
 import { IItem } from "@/types/Item";
 import ItemGrid from "./ui/ItemGrid";
+import { useDebounce } from "@/hooks/useDebounce";
+import ItemModal from "./ui/ItemModal";
 
 const ClientHomePage = () => {
-  const { data } = useGetItems({ page: 1, pageSize: 20 });
   const [activeCategory, setActiveCategory] = useState<number>(0);
   const [selectedItem, setSelectedItem] = useState<IItem | null>(null);
-  console.log(data);
+  const [search, setSearch] = useState<string>("");
+  const debouncedSearch = useDebounce(search, 500);
+  const { data } = useGetItems({ page: 1, pageSize: 50, categoryId: activeCategory, query: debouncedSearch });
   return (
     <ContainerSidebar className="p-4 lg:p-8 space-y-6">
       <div>
@@ -21,7 +24,12 @@ const ClientHomePage = () => {
         <p className="text-muted-foreground font-body mt-1">Explore todos os itens disponíveis no mundo Pokémon.</p>
       </div>
 
-      <FiltersItems activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+      <FiltersItems 
+        activeCategory={activeCategory} 
+        setActiveCategory={setActiveCategory} 
+        search={search}
+        setSearch={setSearch}
+        />
 
       {data?.rows.length === 0 && (
         <div className="text-center py-12 text-muted-foreground font-body">
@@ -30,7 +38,9 @@ const ClientHomePage = () => {
         </div>
       )}
 
-      <ItemGrid items={data?.rows || []} />
+      <ItemGrid items={data?.rows || []} setSelectedItem={setSelectedItem}  selectedItem={selectedItem} />
+
+      <ItemModal selectedItem={selectedItem} setSelectedItem={setSelectedItem} />
     </ContainerSidebar>
   );
 }
