@@ -1,0 +1,34 @@
+# Dependências
+node_modules
+npm-debug.log*
+
+# Build outputs
+.next
+out
+
+# Variáveis de ambiente sensíveis
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Testes
+coverage
+.nyc_output
+
+# Docs / CI
+README.md
+.github
