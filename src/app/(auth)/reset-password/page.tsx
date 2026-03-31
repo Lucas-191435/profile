@@ -1,7 +1,12 @@
+import { Suspense } from "react"
 import ResetPasswordComponentPage from "./ui"
 
 const ResetPasswordPage = () => {
-    return (<ResetPasswordComponentPage />)
+    return (
+        <Suspense>
+            <ResetPasswordComponentPage />
+        </Suspense>
+    )
 }
 
 export default ResetPasswordPage
