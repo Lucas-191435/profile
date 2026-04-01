@@ -17,9 +17,9 @@ export const nextAuthOptions: NextAuthOptions = {
 
       async authorize(credentials, req) {
         try {
-          const response = await axios.post<{ 
-            data: IUser; 
-            token: string; 
+          const response = await axios.post<{
+            data: IUser;
+            token: string;
             message: string;
           }>(
             process.env.baseUrl + "/auth/login",
@@ -81,7 +81,8 @@ export const nextAuthOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: !!process.env.NEXTAUTH_URL?.startsWith("https"),
+        domain: "187.127.0.248",  // ← ADICIONAR ESTA LINHA AQUI
         maxAge: 60 * 60 * 24, // 24 hours
       },
     },
