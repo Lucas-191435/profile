@@ -11,6 +11,6 @@ export const sounds = {
   bgm: new Howl({
     src: ["/sounds/background.mp3"],
     loop: true,
-    volume: 0.2 // 🔥 música baixa
+    volume: 0.2 // 
   })
 };
