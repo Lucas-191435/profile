@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import Filter from "./ui/Filters";
 import { PokemonProvider, usePokemonContext } from "@/context/PokemonContext";
 import PokemonGrid from "./ui/PokemonGrid";
+import { sounds } from "@/utils/sounds";
 const ClientHomePage = () => {
+
   return (
     <PokemonProvider>
       <ContainerSidebar className="space-y-6">
