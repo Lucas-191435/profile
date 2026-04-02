@@ -36,7 +36,6 @@ export const nextAuthOptions: NextAuthOptions = {
             },
           );
 
-          console.log("Login response:", response.data);
           const { data: user } = response.data || {};
 
           if (user && response.status === 200) {
@@ -82,7 +81,7 @@ export const nextAuthOptions: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         secure: !!process.env.NEXTAUTH_URL?.startsWith("https"),
-        domain: "187.127.0.248",  // ← ADICIONAR ESTA LINHA AQUI
+        //domain: "187.127.0.248",  // ← ADICIONAR ESTA LINHA AQUI
         maxAge: 60 * 60 * 24, // 24 hours
       },
     },
