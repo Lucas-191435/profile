@@ -22,6 +22,7 @@ import Link from "next/link";
 import { Suspense, useState } from "react";
 import { signOut } from "next-auth/react";
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
+import { sounds } from "@/utils/sounds";
 
 interface NavItem {
   label: string;
@@ -116,7 +117,7 @@ function SidebarContent({
                     "animate-pulse"
                   )} />
                 )}
-                
+
                 <item.icon
                   className={cn(
                     "h-5 w-5 flex-shrink-0 transition-all duration-300",
@@ -124,7 +125,7 @@ function SidebarContent({
                     "group-hover:scale-110"
                   )}
                 />
-                
+
                 {!collapsed && (
                   <span className={cn(
                     "flex-1 transition-all duration-300",
@@ -141,7 +142,7 @@ function SidebarContent({
             );
           })}
         </div>
-        
+
         {/* Seção adicional para elementos temáticos */}
         {!collapsed && (
           <div className="mt-8 p-4 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/20">
@@ -155,7 +156,7 @@ function SidebarContent({
           </div>
         )}
       </nav>
-      
+
       {/* Botão de Logout */}
       <div className="p-3 border-t border-sidebar-border">
         <button
@@ -173,7 +174,7 @@ function SidebarContent({
               "group-hover:scale-110 group-hover:text-red-400"
             )}
           />
-          
+
           {!collapsed && (
             <span className="flex-1 transition-all duration-300">
               Sair
@@ -192,7 +193,7 @@ export function Sidebar() {
   const isMobile = useIsMobile();
 
   // Mobile: Sheet drawer
-    if (isMobile) {
+  if (isMobile) {
     return (
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>
@@ -214,8 +215,11 @@ export function Sidebar() {
           <div className="flex h-full flex-col">
             <SidebarContent
               collapsed={false}
-              setCollapsed={() => {}}
-              onNavClick={() => setMobileOpen(false)}
+              setCollapsed={() => { }}
+              onNavClick={() => {
+                sounds.clickSideBar.play();
+                setMobileOpen(false)
+              }}
             />
           </div>
         </SheetContent>
@@ -223,7 +227,7 @@ export function Sidebar() {
     );
   }
 
-  
+
   // Desktop: Fixed sidebar
   return (
     <Suspense fallback={<h1>Loading...</h1>}>
@@ -233,10 +237,12 @@ export function Sidebar() {
           isCollapsed ? "w-20" : "w-64",
         )}
         style={{
-         
+
         }}
       >
-        <SidebarContent collapsed={isCollapsed} setCollapsed={toggleCollapse} />
+        <SidebarContent collapsed={isCollapsed} setCollapsed={toggleCollapse} onNavClick={() => {
+          sounds.clickSideBar.play();
+        }} />
       </aside>
     </Suspense>
   );

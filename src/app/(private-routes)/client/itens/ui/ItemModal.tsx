@@ -24,9 +24,9 @@ type ItemModalProps = {
 const ItemModal = ({ selectedItem, setSelectedItem }: ItemModalProps) => {
 
     return (
-        <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
+        <Dialog  open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
         {selectedItem && (
-          <DialogContent className="bg-card border-border max-w-lg max-h-[85vh] overflow-y-auto scrollbar-premium">
+          <DialogContent className="bg-card border-border  max-h-[85vh] overflow-y-auto scrollbar-premium">
             <DialogHeader>
               <div className="flex items-center gap-4">
                 <div className="relative w-1/3 h-16 rounded-xl bg-secondary flex items-center justify-center border border-border">

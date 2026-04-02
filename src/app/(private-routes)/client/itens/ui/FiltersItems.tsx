@@ -24,9 +24,13 @@ const FiltersItems = ({ activeCategory, setActiveCategory, search, setSearch }: 
 
             {/* Category Tabs */}
             <Tabs value={activeCategory.toString()} onValueChange={(v) => setActiveCategory(parseInt(v))}>
-                <TabsList className="bg-secondary/50 border border-border flex-wrap h-auto gap-1 p-1">
+                <TabsList className="bg-secondary/50 border border-border !w-full xl:!max-w-2/3 md:w-auto !grid !grid-cols-3 sm:!grid-cols-5 md:!grid-cols-5 lg:!grid-cols-9 !h-auto gap-1 p-1">
                     {CATEGORIES.map((cat) => (
-                        <TabsTrigger key={cat.key} value={cat.key.toString()} className="gap-1.5 text-xs font-body data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                        <TabsTrigger
+                            key={cat.key}
+                            value={cat.key.toString()}
+                            className="justify-start lg:justify-center !flex-none !whitespace-normal gap-1.5 text-xs font-body data-[state=active]:bg-primary data-[state=active]:text-primary-foreground !min-w-0 !max-w-none"
+                        >
                             {cat.icon}
                             {cat.label}
                         </TabsTrigger>
