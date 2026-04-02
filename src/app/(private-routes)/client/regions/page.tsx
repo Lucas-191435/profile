@@ -1,13 +1,13 @@
 'use client';
 import ContainerSidebar from "@/components/shared/ContainerSidebar";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+
 const ClientHomePage = () => {
-  const {logout} = useAuth();
   return (
-    <ContainerSidebar>
-        <h1>Client Home Page1</h1>
-        <Button onClick={logout}>Logout</Button>
+    <ContainerSidebar className="flex justify-center items-center ">
+        <div className="flex flex-col items-center justify-center gap-4 h-full min-h-[700px] border-2 border-red-500 w-full rounded-3xl" >
+            <h1 className="text-3xl font-bold">Regiões</h1>
+            <p className="">A pagina ainda está em desenvolvimento. Por favor, tenha compreensão.</p>
+        </div>
     </ContainerSidebar>
   );
 }
