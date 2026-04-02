@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Filter from "./ui/Filters";
 import { PokemonProvider, usePokemonContext } from "@/context/PokemonContext";
 import PokemonGrid from "./ui/PokemonGrid";
+import { sounds } from "@/utils/sounds";
 const ClientHomePage = () => {
 
   return (
@@ -24,11 +25,13 @@ const PaginationControls = () => {
 
   const handleNextPage = () => {
     if (pokemons?.count && page < Math.ceil(pokemons.count / 20)) {
+      sounds.clickPagination.play();
       setPage((prevPage) => prevPage + 1);
     }
   };
 
   const handlePreviousPage = () => {
+    sounds.clickPagination.play();
     setPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 

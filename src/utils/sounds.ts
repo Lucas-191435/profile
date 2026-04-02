@@ -29,6 +29,11 @@ export const sounds = {
     volume: 0.2 // 
   }),
 
+   mewtwo: new Howl({
+    src: ["/sounds/mewtwo.mp3"],
+    volume: 0.2 // 
+  }),
+
    squirtle: new Howl({
     src: ["/sounds/epic-sax-guy-plays-for-57-minutes.mp3"],
     volume: 0.4 // 
@@ -36,6 +41,11 @@ export const sounds = {
 
    pikachu: new Howl({
     src: ["/sounds/pikachu.mp3"],
+    volume: 0.2 // 
+  }),
+
+   ditto: new Howl({
+    src: ["/sounds/ditto.mp3"],
     volume: 0.2 // 
   }),
 

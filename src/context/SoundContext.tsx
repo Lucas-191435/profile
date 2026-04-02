@@ -41,8 +41,18 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         } else {
             setIsPlayingSound(false);
+            const strings = ["pokeSound1", "pokeSound2", "pokeSound3", "pokeSound4"];
+            const randomSound = getRandomString(strings);
             sounds.click.play();
+            setTimeout(() => {
+                sounds[randomSound as keyof typeof sounds].play();
+            }, 500);
         }
+    }
+
+    function getRandomString(strings: string[]): string {
+        const randomIndex = Math.floor(Math.random() * strings.length);
+        return strings[randomIndex];
     }
 
     const toggleBgm = () => {
