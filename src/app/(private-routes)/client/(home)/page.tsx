@@ -1,13 +1,10 @@
 'use client';
 import ContainerSidebar from "@/components/shared/ContainerSidebar";
-import { useGetPokemons } from "@/services/queries/usePokemon";
 import Hero from "./ui/Hero";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Filter from "./ui/Filters";
 import { PokemonProvider, usePokemonContext } from "@/context/PokemonContext";
 import PokemonGrid from "./ui/PokemonGrid";
-import { sounds } from "@/utils/sounds";
 const ClientHomePage = () => {
 
   return (
