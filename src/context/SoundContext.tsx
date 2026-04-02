@@ -25,22 +25,20 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const handleSoundChange = (e: string) => {
         setCurrentSound(e);
         if (sounds[e as keyof typeof sounds]) {
+            setIsPlayingSound(true);
+            sounds.bgm.stop();
+            sounds[currentSound as keyof typeof sounds]?.stop();
 
             const sound = sounds[e as keyof typeof sounds];
-
-            // para qualquer áudio atual
-            sounds[currentSound as keyof typeof sounds]?.stop();
-            sounds[e as keyof typeof sounds].play();
-
-            sounds.bgm.pause();
 
             sound.play();
 
             sound.once("end", () => {
-                sounds.bgm.play();
+                if (isBgmPlaying) {
+                    sounds.bgm.play();
+                }
             });
 
-            setCurrentSound(e);
         } else {
             setIsPlayingSound(false);
             sounds.click.play();
@@ -58,12 +56,25 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     useEffect(() => {
-        console.log("Pathname changed:", pathname);
-        if (!sounds.bgm.playing() && pathname.startsWith("/client/pokemon/") && isBgmPlaying) {
-             sounds[currentSound as keyof typeof sounds].play();
+        if (!sounds.bgm.playing()) {
             sounds.bgm.play();
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsBgmPlaying(true);
+
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!pathname.startsWith("/client/pokemon/") && isBgmPlaying) {
+            //  sounds[currentSound as keyof typeof sounds].play();
+            if (!sounds.bgm.playing()) {
+                sounds.bgm.play();
+            }
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setIsBgmPlaying(true);
+        }
+        if (isPlayingSound && !pathname.startsWith("/client/pokemon/")) {
+            sounds[currentSound as keyof typeof sounds].stop();
         }
     }, [pathname]);
 

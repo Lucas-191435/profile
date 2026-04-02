@@ -118,12 +118,10 @@ const useAuth = () => {
   const handleForgotPassword: SubmitHandler<ForgotPasswordSchemaType> = async (data) => {
     try {
       const { email } = data;
-      console.log("Forgot password data:", { email  });
 
       const { request } = api.post("/auth/resetPassword", { email });
       const result = await request;
 
-      console.log("Reset password result:", result.data.data);
 
       replace("/reset-password?token=" + result.data.data);
     } catch (err) {
@@ -134,7 +132,6 @@ const useAuth = () => {
   const handleResetPassword: SubmitHandler<ResetPasswordSchemaType> = async (data) => {
     try {
       const { token, password } = data;
-      console.log("Reset password data:", { token, password });
 
       const { request } = api.post("/auth/validateTokenForResetPassword", data);
       const result = await request;
