@@ -22,7 +22,7 @@ const PokemonCard = ({ pokemon }: PokemonCardProps) => {
     const {handleSoundChange} = useSoundContext();
     return (
         <Link href={`/client/pokemon/${pokemon.number}`} onClick={() => handleSoundChange(pokemon.name as any)} className="block">
-            <div className="card-pokemon group cursor-pointer ">
+            <div className="card-pokemon group cursor-hover ">
                 <div className="flex flex-row sm:flex-col md:flex-row gap-1 justify-between items-start mb-2">
                     <span className="text-muted-foreground font-display text-xs font-semibold">#{pokemon.number.toString().padStart(3, "0")}</span>
                     <div className="flex gap-1">
