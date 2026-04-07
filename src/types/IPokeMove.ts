@@ -1,0 +1,28 @@
+export type IPokeMove = {
+    name: string;
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    drain: number | null;
+    pokeMoveId: number;
+    accuracy: number | null;
+    power: number | null;
+    pp: number | null;
+    priority: number | null;
+    type: string | null;
+    description: string | null;
+    target: string | null;
+    damage_class: string | null;
+    effect: string | null;
+    effect_chance: number | null;
+    ailment: string | null;
+    category: string | null;
+    crit_rate: number | null;
+    flinch_chance: number | null;
+    healing: number | null;
+    min_hits: number | null;
+    max_hits: number | null;
+    min_turns: number | null;
+    max_turns: number | null;
+    stat_chance: number | null;
+};
