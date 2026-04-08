@@ -47,7 +47,7 @@ const PokemonMoves = ({number, pokemonName}: {number: number, pokemonName: strin
                         <GraduationCap className="mr-2 h-4 w-4" /> Ver todos os movimentos
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-card border-border">
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-card border-border scrollbar-premium">
                     <DialogHeader>
                         <DialogTitle className="font-display text-lg tracking-wide">Movimentos de {pokemonName}</DialogTitle>
                         <DialogDescription className="font-body text-muted-foreground">

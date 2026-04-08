@@ -37,6 +37,7 @@ const PaginationControls = () => {
     const pageNumbers = [];
     const maxVisiblePages = isMobile ? 3 : 4; // Responsivo: 3 no mobile, 4 no desktop
     let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+    // eslint-disable-next-line prefer-const
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     // Ajusta o startPage se estivermos no final
