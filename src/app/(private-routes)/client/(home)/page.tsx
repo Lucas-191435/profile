@@ -6,6 +6,7 @@ import Filter from "./ui/Filters";
 import { usePokemonContext } from "@/context/PokemonContext";
 import PokemonGrid from "./ui/PokemonGrid";
 import { sounds } from "@/utils/sounds";
+import { useIsMobile } from "@/hooks/useMobile";
 const ClientHomePage = () => {
 
   return (
@@ -20,6 +21,7 @@ const ClientHomePage = () => {
 };
 
 const PaginationControls = () => {
+  const isMobile = useIsMobile();
   const { page, setPage, pokemons } = usePokemonContext();
   const pageSize = 24; // Deve coincidir com o pageSize do PokemonContext
   const totalPages = pokemons?.count ? Math.ceil(pokemons.count / pageSize) : 1;
@@ -33,7 +35,7 @@ const PaginationControls = () => {
 
   const renderPageNumbers = () => {
     const pageNumbers = [];
-    const maxVisiblePages = typeof window !== 'undefined' && window.innerWidth < 640 ? 3 : 4; // Responsivo: 3 no mobile, 5 no desktop
+    const maxVisiblePages = isMobile ? 3 : 4; // Responsivo: 3 no mobile, 4 no desktop
     let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
@@ -102,19 +104,37 @@ const PaginationControls = () => {
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4 px-4">
+       <div className="sm:hidden flex flex-wrap items-center justify-center gap-1 sm:gap-2 w-full max-w-4xl overflow-x-auto pb-2">
+        {/* Página anterior */}
+        <Button
+          onClick={() => handlePageChange(page - 1)}
+          disabled={page === 1}
+
+          className="min-w-[40px] sm:min-w-[60px]"
+        >
+          Prev
+        </Button>
+        {/* Próxima página */}
+        <Button
+          onClick={() => handlePageChange(page + 1)}
+          disabled={page === totalPages}
+
+          className="min-w-[40px] sm:min-w-[60px]"
+        >
+         Next
+        </Button>
+       </div>
+       
       {/* Controles principais */}
       <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 w-full max-w-4xl overflow-x-auto pb-2">
-      
 
         {/* Página anterior */}
         <Button
           onClick={() => handlePageChange(page - 1)}
           disabled={page === 1}
-          size="sm"
-          variant="outline"
-          className="min-w-[40px] sm:min-w-[60px]"
+
+          className="min-w-[40px] sm:min-w-[60px] hidden sm:inline"
         >
-          <span className="sm:hidden">‹</span>
           <span className="hidden sm:inline">Prev</span>
         </Button>
 
@@ -127,18 +147,15 @@ const PaginationControls = () => {
         <Button
           onClick={() => handlePageChange(page + 1)}
           disabled={page === totalPages}
-          size="sm"
-          variant="outline"
-          className="min-w-[40px] sm:min-w-[60px]"
+ 
+           className="min-w-[40px] sm:min-w-[60px] hidden sm:inline"
         >
-          <span className="sm:hidden">›</span>
           <span className="hidden sm:inline">Next</span>
         </Button>
-
-        
       </div>
+
       <div className="flex items-center justify-center gap-1 sm:gap-2 w-full max-w-4xl overflow-x-auto pb-2">
-          {/* Primeira página */}
+        {/* Primeira página */}
         <Button
           onClick={() => handlePageChange(1)}
           disabled={page === 1}
