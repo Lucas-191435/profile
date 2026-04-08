@@ -10,6 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import Variations from './ui/Variations';
 import Status from './ui/Status';
 import Evolutions from './ui/Evolutions';
+import { sounds } from '@/utils/sounds';
+import PokemonMoves from './ui/PokemonMoves';
 
 const PokemonPage = () => {
   const params = useParams();
@@ -25,7 +27,10 @@ const PokemonPage = () => {
 
   return (
     <div className='px-8 md:px-12 py-6 space-y-4'>
-      <Button variant="ghost" onClick={() => router.push('/client')}>
+      <Button variant="ghost" onClick={() => {
+        sounds.click.play();
+        router.push('/client')
+      }}>
         <MoveLeft className="mr-2" />
         Back to Pokemon List
       </Button>
@@ -35,6 +40,10 @@ const PokemonPage = () => {
       <Separator className="border-border" />
 
       <Status pokemon={data} />
+
+      <Separator className="border-border" />
+
+      <PokemonMoves number={data.number} pokemonName={data.name} />
 
       <Separator className="border-border" />
 

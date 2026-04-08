@@ -1,6 +1,8 @@
 export type IPokeMove = {
     name: string;
     id: string;
+    learn_method: 'LEVEL_UP' | 'MACHINE' | 'TUTOR' | 'EGG' | 'UNKNOWN';
+    level: number | null;
     createdAt: Date;
     updatedAt: Date;
     drain: number | null;
