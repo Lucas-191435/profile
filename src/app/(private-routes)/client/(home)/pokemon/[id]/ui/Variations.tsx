@@ -3,7 +3,6 @@ import { IPokemonComplete } from "@/types/IPokemon";
 import Image from "next/image";
 
 const Variations = ({ pokemon }: { pokemon: IPokemonComplete }) => {
-    console.log(pokemon.sprites);
     return (
         <section>
             <h2 className="font-display text-xl font-bold tracking-wide mb-4">Variações de Imagem</h2>
