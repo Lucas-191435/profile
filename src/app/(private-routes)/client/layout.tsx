@@ -1,6 +1,6 @@
 import { ContentWrapper } from "@/components/layout/ContentWrapper";
 
-import {Sidebar} from "@/components/sidebar/sidebar-client";
+import { Sidebar } from "@/components/sidebar/sidebar-client";
 import { SoundProvider } from "@/context/SoundContext";
 import { SidebarCollapseProvider } from "@/hooks/useSidebarCollapse";
 import { nextAuthOptions } from "@/lib/nextAuthOptions";
@@ -12,18 +12,18 @@ const ClientLayout = async ({ children }: { children: React.ReactNode }) => {
   if (!session) {
     redirect("/login");
   }
-  
+
   return (
     // <main>
-        <SidebarCollapseProvider>
-          <SoundProvider>
+    <SidebarCollapseProvider>
+      <SoundProvider>
         <Sidebar />
-          <ContentWrapper>
+        <ContentWrapper>
           {children}
         </ContentWrapper>
-        </SoundProvider>
-        </SidebarCollapseProvider>
-      // </main>
+      </SoundProvider>
+    </SidebarCollapseProvider>
+    // </main>
   );
 }
 

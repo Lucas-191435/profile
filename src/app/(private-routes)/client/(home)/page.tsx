@@ -3,20 +3,19 @@ import ContainerSidebar from "@/components/shared/ContainerSidebar";
 import Hero from "./ui/Hero";
 import { Button } from "@/components/ui/button";
 import Filter from "./ui/Filters";
-import { PokemonProvider, usePokemonContext } from "@/context/PokemonContext";
+import { usePokemonContext } from "@/context/PokemonContext";
 import PokemonGrid from "./ui/PokemonGrid";
 import { sounds } from "@/utils/sounds";
 const ClientHomePage = () => {
 
   return (
-    <PokemonProvider>
-      <ContainerSidebar className="space-y-6">
-        <Hero />
-        <Filter />
-        <PokemonGrid />
-        <PaginationControls />
-      </ContainerSidebar>
-    </PokemonProvider>
+
+    <ContainerSidebar className="space-y-6">
+      <Hero />
+      <Filter />
+      <PokemonGrid />
+      <PaginationControls />
+    </ContainerSidebar>
   );
 };
 
@@ -37,10 +36,10 @@ const PaginationControls = () => {
 
   return (
     <div className="flex flex-col items-center justify-center ">
-    <div className="flex items-center justify-between mt-4 gap-3">
-      <Button onClick={handlePreviousPage} disabled={page === 1}>Previous</Button>
-      <Button onClick={handleNextPage}>Next</Button>
-    </div>
+      <div className="flex items-center justify-between mt-4 gap-3">
+        <Button onClick={handlePreviousPage} disabled={page === 1}>Previous</Button>
+        <Button onClick={handleNextPage}>Next</Button>
+      </div>
       <h1>{pokemons?.count}</h1>
 
     </div>
