@@ -3,6 +3,7 @@ import { IPokemon } from "@/types/IPokemon";
 import { sounds } from "@/utils/sounds";
 import Image from "next/image";
 import Link from "next/link";
+import { Music } from "lucide-react"
 
 
 interface PokemonCardProps {
@@ -19,10 +20,15 @@ const typeColors: Record<string, string> = {
 };
 
 const PokemonCard = ({ pokemon }: PokemonCardProps) => {
-    const {handleSoundChange} = useSoundContext();
+    const { handleSoundChange } = useSoundContext();
     return (
         <Link href={`/client/pokemon/${pokemon.number}`} onClick={() => handleSoundChange(pokemon.name as any)} className="block">
-            <div className="card-pokemon group cursor-hover ">
+            <div className="card-pokemon group cursor-hover relative">
+                {sounds[pokemon.name as keyof typeof sounds] && (
+                    <div className="animate-bounce-custom absolute bottom-2 right-2 bg-red-400 p-1 rounded-[5px]">
+                        <Music size={18} />
+                    </div>
+                )}
                 <div className="flex flex-row sm:flex-col md:flex-row gap-1 justify-between items-start mb-2">
                     <span className="text-muted-foreground font-display text-xs font-semibold">#{pokemon.number.toString().padStart(3, "0")}</span>
                     <div className="flex gap-1">
@@ -40,7 +46,7 @@ const PokemonCard = ({ pokemon }: PokemonCardProps) => {
                         width={200}
                         height={200}
                         priority
-                         className="w-auto h-full max-w-full max-h-full min-w-[120px] min-h-[120px] object-contain group-hover:animate-float transition-transform duration-500 drop-shadow-lg opacity-0 scale-95"
+                        className="w-auto h-full max-w-full max-h-full min-w-[120px] min-h-[120px] object-contain group-hover:animate-float transition-transform duration-500 drop-shadow-lg opacity-0 scale-95"
                         onLoadingComplete={(img) => img.classList.add("opacity-100", "scale-100")}
                     />
                 </div>

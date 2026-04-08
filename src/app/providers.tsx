@@ -4,6 +4,7 @@ import { ReactNode, useState } from "react";
 import { SessionProvider } from "next-auth/react";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PokemonProvider } from "@/context/PokemonContext";
 export interface ProvidersProps {
   children: ReactNode;
 }
@@ -44,7 +45,9 @@ export function Providers({ children }: ProvidersProps) {
         refetchOnWindowFocus={false}
         session={undefined}
       >
-        {children}
+        <PokemonProvider>
+          {children}
+        </PokemonProvider>
       </SessionProvider>
     </QueryClientProvider>
   );

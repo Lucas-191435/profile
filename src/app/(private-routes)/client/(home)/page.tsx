@@ -3,46 +3,185 @@ import ContainerSidebar from "@/components/shared/ContainerSidebar";
 import Hero from "./ui/Hero";
 import { Button } from "@/components/ui/button";
 import Filter from "./ui/Filters";
-import { PokemonProvider, usePokemonContext } from "@/context/PokemonContext";
+import { usePokemonContext } from "@/context/PokemonContext";
 import PokemonGrid from "./ui/PokemonGrid";
 import { sounds } from "@/utils/sounds";
+import { useIsMobile } from "@/hooks/useMobile";
 const ClientHomePage = () => {
 
   return (
-    <PokemonProvider>
-      <ContainerSidebar className="space-y-6">
-        <Hero />
-        <Filter />
-        <PokemonGrid />
-        <PaginationControls />
-      </ContainerSidebar>
-    </PokemonProvider>
+
+    <ContainerSidebar className="space-y-6">
+      <Hero />
+      <Filter />
+      <PokemonGrid />
+      <PaginationControls />
+    </ContainerSidebar>
   );
 };
 
 const PaginationControls = () => {
+  const isMobile = useIsMobile();
   const { page, setPage, pokemons } = usePokemonContext();
+  const pageSize = 24; // Deve coincidir com o pageSize do PokemonContext
+  const totalPages = pokemons?.count ? Math.ceil(pokemons.count / pageSize) : 1;
 
-  const handleNextPage = () => {
-    if (pokemons?.count && page < Math.ceil(pokemons.count / 20)) {
+  const handlePageChange = (targetPage: number) => {
+    if (targetPage >= 1 && targetPage <= totalPages && targetPage !== page) {
       sounds.clickPagination.play();
-      setPage((prevPage) => prevPage + 1);
+      setPage(targetPage);
     }
   };
 
-  const handlePreviousPage = () => {
-    sounds.clickPagination.play();
-    setPage((prevPage) => Math.max(prevPage - 1, 1));
+  const renderPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = isMobile ? 3 : 4; // Responsivo: 3 no mobile, 4 no desktop
+    let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+    // eslint-disable-next-line prefer-const
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    // Ajusta o startPage se estivermos no final
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // Adiciona primeira página e reticências se necessário
+    if (startPage > 1) {
+      pageNumbers.push(
+        <Button
+          key={1}
+          onClick={() => handlePageChange(1)}
+          size="sm"
+          variant={1 === page ? "default" : "outline"}
+          className="min-w-[40px]"
+        >
+          1
+        </Button>
+      );
+      if (startPage > 2) {
+        pageNumbers.push(<span key="start-ellipsis" className="px-2 text-muted-foreground">...</span>);
+      }
+    }
+
+    // Adiciona páginas visíveis
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(
+        <Button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          size="sm"
+          variant={i === page ? "default" : "outline"}
+          className="min-w-[40px]"
+        >
+          {i}
+        </Button>
+      );
+    }
+
+    // Adiciona última página e reticências se necessário
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        pageNumbers.push(<span key="end-ellipsis" className="px-2 text-muted-foreground">...</span>);
+      }
+      pageNumbers.push(
+        <Button
+          key={totalPages}
+          onClick={() => handlePageChange(totalPages)}
+          size="sm"
+          variant={totalPages === page ? "default" : "outline"}
+          className="min-w-[40px]"
+        >
+          {totalPages}
+        </Button>
+      );
+    }
+
+    return pageNumbers;
   };
 
-  return (
-    <div className="flex flex-col items-center justify-center ">
-    <div className="flex items-center justify-between mt-4 gap-3">
-      <Button onClick={handlePreviousPage} disabled={page === 1}>Previous</Button>
-      <Button onClick={handleNextPage}>Next</Button>
-    </div>
-      <h1>{pokemons?.count}</h1>
+  if (totalPages <= 1) {
+    return null; // Não mostra paginação se houver apenas uma página
+  }
 
+  return (
+    <div className="flex flex-col items-center justify-center space-y-4 px-4">
+       <div className="sm:hidden flex flex-wrap items-center justify-center gap-1 sm:gap-2 w-full max-w-4xl overflow-x-auto pb-2">
+        {/* Página anterior */}
+        <Button
+          onClick={() => handlePageChange(page - 1)}
+          disabled={page === 1}
+
+          className="min-w-[40px] sm:min-w-[60px]"
+        >
+          Prev
+        </Button>
+        {/* Próxima página */}
+        <Button
+          onClick={() => handlePageChange(page + 1)}
+          disabled={page === totalPages}
+
+          className="min-w-[40px] sm:min-w-[60px]"
+        >
+         Next
+        </Button>
+       </div>
+       
+      {/* Controles principais */}
+      <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 w-full max-w-4xl overflow-x-auto pb-2">
+
+        {/* Página anterior */}
+        <Button
+          onClick={() => handlePageChange(page - 1)}
+          disabled={page === 1}
+
+          className="min-w-[40px] sm:min-w-[60px] hidden sm:inline"
+        >
+          <span className="hidden sm:inline">Prev</span>
+        </Button>
+
+        {/* Números das páginas */}
+        <div className="flex items-center gap-1 mx-2">
+          {renderPageNumbers()}
+        </div>
+
+        {/* Próxima página */}
+        <Button
+          onClick={() => handlePageChange(page + 1)}
+          disabled={page === totalPages}
+ 
+           className="min-w-[40px] sm:min-w-[60px] hidden sm:inline"
+        >
+          <span className="hidden sm:inline">Next</span>
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-center gap-1 sm:gap-2 w-full max-w-4xl overflow-x-auto pb-2">
+        {/* Primeira página */}
+        <Button
+          onClick={() => handlePageChange(1)}
+          disabled={page === 1}
+          size="sm"
+          variant="outline"
+          className="hidden sm:flex min-w-[60px]"
+        >
+          First
+        </Button>
+        {/* Última página */}
+        <Button
+          onClick={() => handlePageChange(totalPages)}
+          disabled={page === totalPages}
+          size="sm"
+          variant="outline"
+          className="hidden sm:flex min-w-[60px]"
+        >
+          Last
+        </Button>
+      </div>
+
+      {/* Informações da página */}
+      <div className="text-sm text-muted-foreground text-center">
+        Page {page} of {totalPages} • Total: {pokemons?.count || 0} items ({pageSize} per page)
+      </div>
     </div>
   );
 };
