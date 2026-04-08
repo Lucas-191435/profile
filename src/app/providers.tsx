@@ -45,9 +45,7 @@ export function Providers({ children }: ProvidersProps) {
         refetchOnWindowFocus={false}
         session={undefined}
       >
-        <PokemonProvider>
           {children}
-        </PokemonProvider>
       </SessionProvider>
     </QueryClientProvider>
   );
