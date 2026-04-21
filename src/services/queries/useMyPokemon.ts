@@ -23,8 +23,8 @@ export const useCreatePokemon = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (newPokemon: any): Promise<any> => {
-            const response = await api.post("/my-pokemon/capture", newPokemon).request;
+        mutationFn: async (capturatedPokemon: { id: string, nickname: string }): Promise<any> => {
+            const response = await api.post("/my-pokemon/capture", capturatedPokemon).request;
             return response.data;
         },
         onSuccess: () => {
@@ -32,6 +32,24 @@ export const useCreatePokemon = () => {
         },
         onError: (error: AxiosError<{ success: boolean, error: string }>) => {
             console.log("Erro ao capturar Pokémon:", error.response?.data);
+        }
+    });
+};
+
+export const useLeavePokemon = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (pokemonId: string): Promise<any> => {
+            const response = await api.delete(`/my-pokemon/leave/${pokemonId}`).request;
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-pokemon"] });
+            successToast({ description: "Pokémon removido com sucesso" });
+        },
+        onError: (error: AxiosError<{ success: boolean, error: string }>) => {
+            console.log("Erro ao remover Pokémon:", error.response?.data);
         }
     });
 };

@@ -13,6 +13,9 @@ import { Plus, X, Swords, Shield, Zap, Users } from "lucide-react";
 import ContainerSidebar from "@/components/shared/ContainerSidebar";
 import { useMyPokemon } from "@/services/queries/useMyPokemon";
 
+import { useMyPokemonContext } from "@/context/MyPokemonContext";
+import MyCollection from "./ui/MyCollection";
+
 
 const typeColors: Record<string, string> = {
   fire: "bg-red-500", water: "bg-blue-500", grass: "bg-green-500", electric: "bg-yellow-500",
@@ -37,8 +40,6 @@ const emptyTeam = (name: string): Team => ({
   slots: Array.from({ length: 6 }, () => ({ pokemonId: null, moves: [] })),
 });
 
-const spriteUrl = (id: number) =>
-  `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 
 const defaultTeams: Team[] = [
   emptyTeam("Time Alpha"),
@@ -46,18 +47,16 @@ const defaultTeams: Team[] = [
   emptyTeam("Time Gamma"),
 ];
 const MyPokemonPage = () => {
-  const { data, isLoading, error } = useMyPokemon({ enabled: true });
-  const myPokemon = data || [];
+  // const { data, isLoading, error } = useMyPokemon({ enabled: true });
+  const { pokemons, isLoading: contextLoading, error: contextError, myCollection, setMyCollection } = useMyPokemonContext();
+  const myPokemon = pokemons || [];
   console.log("My Pokemon:", myPokemon);
   const [teams, setTeams] = useState<Team[]>(() => {
     const saved = localStorage.getItem("pokemon-teams");
     return saved ? JSON.parse(saved) : defaultTeams;
   });
 
-  const [myCollection, setMyCollection] = useState<string[]>(() => {
-    const saved = localStorage.getItem("pokemon-collection");
-    return saved ? JSON.parse(saved) : myPokemon ? myPokemon.map((p) => p.id) : [];
-  });
+
 
   const [selectedTeamIdx, setSelectedTeamIdx] = useState(0);
   const [selectedSlotIdx, setSelectedSlotIdx] = useState<number | null>(null);
@@ -104,12 +103,6 @@ const MyPokemonPage = () => {
     });
   };
 
-  const toggleCollection = (id: string) => {
-    setMyCollection((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
   const currentTeam = teams[selectedTeamIdx];
   const selectedSlot =
     selectedSlotIdx !== null ? currentTeam.slots[selectedSlotIdx] : null;
@@ -129,30 +122,7 @@ const MyPokemonPage = () => {
         </h1>
 
         {/* Collection */}
-        <section>
-          <h2 className="font-display text-lg font-semibold mb-3 text-muted-foreground">Minha Coleção</h2>
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
-            {myPokemon.map((p) => {
-              const owned = myCollection.includes(p.id);
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => toggleCollection(p.id)}
-                  className={`relative rounded-lg border p-1 transition-all hover:scale-105 ${owned
-                      ? "border-primary/50 bg-card"
-                      : "border-border/30 bg-card/30 opacity-40 grayscale"
-                    }`}
-                >
-                  <img src={p.pokemon.img1} alt={p.pokemon.name} className="w-full aspect-square object-contain" />
-                  <span className="block text-[10px] font-body text-center truncate">{p.pokemon.name}</span>
-                  {owned && (
-                    <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-primary" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        <MyCollection />
 
         <Separator className="bg-border/50" />
 
@@ -214,10 +184,10 @@ const MyPokemonPage = () => {
                             </button>
                             <img
                               src={poke.pokemon.img1}
-                              alt={poke.pokemon.name}
+                              alt={poke.nickname || poke.pokemon.name}
                               className="w-16 h-16 object-contain drop-shadow-lg"
                             />
-                            <span className="font-body text-xs font-semibold mt-1">{poke.pokemon.name}</span>
+                            <span className="font-body text-xs font-semibold mt-1">{poke.nickname || poke.pokemon.name}</span>
                             <div className="flex gap-0.5 mt-1">
                               {poke.pokemon.types.split(",").map((t) => (
                                 <span key={t} className={`${typeColors[t]} w-2 h-2 rounded-full`} />
