@@ -12,6 +12,7 @@ import Status from './ui/Status';
 import Evolutions from './ui/Evolutions';
 import { sounds } from '@/utils/sounds';
 import PokemonMoves from './ui/PokemonMoves';
+import CapturePokemon from './ui/CapturePokemon';
 
 const PokemonPage = () => {
   const params = useParams();
@@ -27,13 +28,19 @@ const PokemonPage = () => {
 
   return (
     <div className='px-8 md:px-12 py-6 space-y-4'>
-      <Button variant="ghost" onClick={() => {
-        sounds.click.play();
-        router.push('/client')
-      }}>
-        <MoveLeft className="mr-2" />
-        Back to Pokemon List
-      </Button>
+      <div className='flex justify-between'>
+
+        <Button variant="ghost" onClick={() => {
+          sounds.click.play();
+          router.push('/client')
+        }}>
+          <MoveLeft className="mr-2 hover:text-white" />
+          Voltar à Pokedex
+        </Button>
+
+        <CapturePokemon pokemon={{ id: data.id, name: data.name }} />
+
+      </div>
 
       <Description pokemon={data} />
 

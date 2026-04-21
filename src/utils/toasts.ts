@@ -11,4 +11,8 @@ const errorToast = ({ description }: ToastProps) => {
   toast.error(description);
 };
 
-export { successToast, errorToast };
+const infoToast = ({ description }: ToastProps) => {
+  toast.info(description);
+};
+
+export { successToast, errorToast, infoToast };
