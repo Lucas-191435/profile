@@ -28,11 +28,10 @@ export const useCreatePokemon = () => {
             return response.data;
         },
         onSuccess: () => {
-             queryClient.invalidateQueries({ queryKey: ["my-pokemon"] });
-             successToast({ description: "Pokémon capturado" });
+            queryClient.invalidateQueries({ queryKey: ["my-pokemon"] });
         },
-            onError: (error: AxiosError<{success: boolean, error: string}>) => {
+        onError: (error: AxiosError<{ success: boolean, error: string }>) => {
             console.log("Erro ao capturar Pokémon:", error.response?.data);
-            }
+        }
     });
 };
