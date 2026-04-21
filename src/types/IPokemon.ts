@@ -34,6 +34,7 @@ interface PokemonStat {
 }
 
 export interface IPokemonComplete {
+  id: string;
   number: number;
   name: string;
   types: string[];
