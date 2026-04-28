@@ -1,5 +1,5 @@
 import { useMyPokemon } from "@/services/queries/useMyPokemon";
-import { IMyPokemon } from "@/types/IMyPokemon";
+import { IMyPokemon, Team } from "@/types/IMyPokemon";
 import { useContext, createContext, useState } from "react";
 
 interface MyPokemonContextType {
@@ -8,23 +8,36 @@ interface MyPokemonContextType {
     error: any; 
     myCollection: string[];
     setMyCollection: React.Dispatch<React.SetStateAction<string[]>>;
+    teamSelected: "teamAlpha" | "teamBeta" | "teamGamma";
+    setTeamSelected: React.Dispatch<React.SetStateAction<"teamAlpha" | "teamBeta" | "teamGamma">>;
+    handleSubmitTeam: ({team}: {team: Team}) => void;
 }
+
+
 
 const MyPokemonContext = createContext<MyPokemonContextType | undefined>(undefined);
 
 export const MyPokemonProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { data: pokemons, isLoading, error } = useMyPokemon({ enabled: true });
+    const [teamSelected, setTeamSelected] = useState<"teamAlpha" | "teamBeta" | "teamGamma">("teamAlpha");
     const [myCollection, setMyCollection] = useState<string[]>(() => {
             const saved = localStorage.getItem("pokemon-collection");
             return saved ? JSON.parse(saved) : pokemons ? pokemons.map((p) => p.id) : [];
         });
+
+    const handleSubmitTeam = ({team}: {team: Team}) => {
+        
+    }
     return (
         <MyPokemonContext.Provider value={{
             pokemons,
             isLoading,
             error,
             myCollection,
-            setMyCollection
+            setMyCollection,
+            teamSelected,
+            setTeamSelected,
+            handleSubmitTeam
         }}>
             {children}
         </MyPokemonContext.Provider>

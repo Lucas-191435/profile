@@ -9,13 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Plus, X, Swords, Shield, Zap, Users } from "lucide-react";
+import { Plus, X, Swords, Shield, Users, Sparkles, Edit, XSquare } from "lucide-react";
 import ContainerSidebar from "@/components/shared/ContainerSidebar";
 import { useMyPokemon } from "@/services/queries/useMyPokemon";
 
 import { useMyPokemonContext } from "@/context/MyPokemonContext";
 import MyCollection from "./ui/MyCollection";
 import MyPokemonSkeleton from "./ui/MyPokemonSkeleton";
+import { sounds } from "@/utils/sounds";
+import { Team } from "@/types/IMyPokemon";
 
 
 const typeColors: Record<string, string> = {
@@ -26,14 +28,17 @@ const typeColors: Record<string, string> = {
   dark: "bg-gray-700", steel: "bg-gray-500",
 };
 
-interface TeamSlot {
-  pokemonId: string | null;
-  moves: string[];
+
+const teamsName = {
+  "Time Alpha": "teamAlpha",
+  "Time Beta": "teamBeta",
+  "Time Gamma": "teamGamma",
 }
 
-interface Team {
-  name: string;
-  slots: TeamSlot[];
+const teamsIdx = {
+  "teamAlpha": 0,
+  "teamBeta": 1,
+  "teamGamma": 2,
 }
 
 const emptyTeam = (name: string): Team => ({
@@ -49,13 +54,21 @@ const defaultTeams: Team[] = [
 ];
 const MyPokemonPage = () => {
   // const { data, isLoading, error } = useMyPokemon({ enabled: true });
-  const { pokemons, isLoading: contextLoading, error: contextError, myCollection, setMyCollection } = useMyPokemonContext();
+  const {
+    pokemons,
+    isLoading: contextLoading,
+    error,
+    myCollection,
+    teamSelected, setTeamSelected
+  } = useMyPokemonContext();
+  const [isEditTeam, setIsEditTeam] = useState(false);
   const myPokemon = pokemons || [];
-  console.log("My Pokemon:", myPokemon);
   const [teams, setTeams] = useState<Team[]>(() => {
     const saved = localStorage.getItem("pokemon-teams");
     return saved ? JSON.parse(saved) : defaultTeams;
   });
+
+  const [editTeam, setEditTeam] = useState<Team | null>(null);
 
 
 
@@ -89,6 +102,7 @@ const MyPokemonPage = () => {
   };
 
   const removeSlotPokemon = (teamIdx: number, slotIdx: number) => {
+    console.log("removeSlotPokemon", teamIdx, slotIdx);
     setTeams((prev) => {
       const next = JSON.parse(JSON.stringify(prev)) as Team[];
       next[teamIdx].slots[slotIdx] = { pokemonId: null, moves: [] };
@@ -121,6 +135,39 @@ const MyPokemonPage = () => {
     return <MyPokemonSkeleton />;
   }
 
+  const handleTeam = (team: string) => {
+    console.log("handleTeam", team, teamSelected);
+    if (teamSelected !== team) {
+      console.log("Selected team", team);
+      sounds.clickPagination.play();
+      setTeamSelected(team as "teamAlpha" | "teamBeta" | "teamGamma");
+    }
+  }
+
+  const handleEditTeam = () => {
+    const teamidx = teamsIdx[teamSelected as keyof typeof teamsIdx];
+    console.log("Edit team", teamidx);
+    setEditTeam(teams[teamidx]);
+    setIsEditTeam(true);
+  }
+
+  const handleSubmitEditTeam = () => {
+    console.log("Edit team", currentTeam.slots);
+    setIsEditTeam(false);
+  }
+
+  const handleCancelEditTeam = () => {
+    console.log("Edit team", currentTeam.slots);
+
+    setTeams((prev) => {
+      const next = JSON.parse(JSON.stringify(prev)) as Team[];
+      next[selectedTeamIdx] = editTeam || emptyTeam(currentTeam.name);
+      return next;
+    });
+    setEditTeam(null);
+    setIsEditTeam(false);
+  }
+
   return (
     <ContainerSidebar className="p-4 lg:p-8 space-y-6">
       <h1 className="font-display text-2xl font-bold tracking-wide flex items-center gap-2">
@@ -140,17 +187,41 @@ const MyPokemonPage = () => {
         <Tabs
           value={String(selectedTeamIdx)}
           onValueChange={(v) => {
-            setSelectedTeamIdx(Number(v));
-            setSelectedSlotIdx(null);
+            if (!isEditTeam) {
+              console.log("Selected team idx", v);
+              setSelectedTeamIdx(Number(v));
+              setSelectedSlotIdx(null);
+              handleTeam(teamsName[teams[Number(v)].name as keyof typeof teamsName]);
+            }
           }}
         >
-          <TabsList className="bg-card/60 border border-border/50">
-            {teams.map((t, i) => (
-              <TabsTrigger key={i} value={String(i)} className="font-display text-xs tracking-wider">
-                {t.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="flex row items-center justify-between">
+
+            <TabsList className="bg-card/60 border border-border/50">
+              {teams.map((t: { name: string }, i) => (
+                <TabsTrigger key={i} value={String(i)} className="font-display text-xs tracking-wider" onClick={() => handleTeam(teamsName[t.name as keyof typeof teamsName])}>
+                  {t.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {!isEditTeam &&
+              <Button size="sm" className="font-body glow-red" onClick={handleEditTeam}>
+                <Edit className="mr-2 h-4 w-4" /> Editar
+              </Button>
+            }
+
+            {isEditTeam && (
+              <div className="flex row gap-2">
+                <Button size="sm" className="font-body glow-red" onClick={handleCancelEditTeam}>
+                  <XSquare className="mr-2 h-4 w-4" /> cancelar
+                </Button>
+                <Button size="sm" className="font-body glow-green bg-grass hover:bg-grass/70 cursor-pointer" onClick={handleSubmitEditTeam}>
+                  <Edit className="mr-2 h-4 w-4" /> salvar
+                </Button>
+              </div>
+            )}
+          </div>
 
           {teams.map((team, tIdx) => (
             <TabsContent key={tIdx} value={String(tIdx)} className="mt-4">
@@ -178,16 +249,18 @@ const MyPokemonPage = () => {
                     >
                       {poke ? (
                         <>
-                          <button
-                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive/80 flex items-center justify-center hover:bg-destructive z-10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeSlotPokemon(tIdx, sIdx);
-                              if (isSelected) setSelectedSlotIdx(null);
-                            }}
-                          >
-                            <X className="w-3 h-3 text-destructive-foreground" />
-                          </button>
+                          {isEditTeam && (
+                            <button
+                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive/80 flex items-center justify-center hover:bg-destructive z-10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeSlotPokemon(tIdx, sIdx);
+                                if (isSelected) setSelectedSlotIdx(null);
+                              }}
+                            >
+                              <X className="w-3 h-3 text-destructive-foreground" />
+                            </button>
+                          )}
                           <img
                             src={poke.pokemon.img1}
                             alt={poke.nickname || poke.pokemon.name}

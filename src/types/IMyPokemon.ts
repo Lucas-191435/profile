@@ -8,3 +8,13 @@ export interface IMyPokemon {
         types: string;
     };
 }
+
+export interface TeamSlot {
+  pokemonId: string | null;
+  moves: string[];
+}
+
+export interface Team {
+  name: string;
+  slots: TeamSlot[];
+}
