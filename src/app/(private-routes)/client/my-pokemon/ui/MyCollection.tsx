@@ -3,17 +3,24 @@ import { X } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useLeavePokemon } from "@/services/queries/useMyPokemon";
 
 const MyCollection = () => {
     const { pokemons, isLoading: contextLoading, error: contextError, myCollection, setMyCollection } = useMyPokemonContext();
     const myPokemon = pokemons || [];
     const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+    const leavePokemon = useLeavePokemon();
 
     const toggleCollection = (id: string) => {
         setMyCollection((prev) =>
             prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
         );
     };
+
+     const handleLeavePokemon = (pokeId: string) => {
+        leavePokemon.mutate(pokeId);
+    }
+
     return (
         <>
             <section>
@@ -39,7 +46,7 @@ const MyCollection = () => {
                                     className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive flex items-center justify-center hover:bg-red-600 z-50 shadow-sm"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setRemoveDialogOpen(true);
+                                       handleLeavePokemon(p.id);
                                     }}
                                 >
                                     <X className="w-3 h-3 text-white" />

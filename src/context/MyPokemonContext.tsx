@@ -1,16 +1,16 @@
-import { useMyPokemon } from "@/services/queries/useMyPokemon";
+import { useLeavePokemon, useMyPokemon, useUpdatePokemonTeam } from "@/services/queries/useMyPokemon";
 import { IMyPokemon, Team } from "@/types/IMyPokemon";
 import { useContext, createContext, useState } from "react";
 
 interface MyPokemonContextType {
-    pokemons: IMyPokemon[] | undefined; 
+    pokemons: IMyPokemon[] | undefined;
     isLoading: boolean;
-    error: any; 
+    error: any;
     myCollection: string[];
     setMyCollection: React.Dispatch<React.SetStateAction<string[]>>;
     teamSelected: "teamAlpha" | "teamBeta" | "teamGamma";
     setTeamSelected: React.Dispatch<React.SetStateAction<"teamAlpha" | "teamBeta" | "teamGamma">>;
-    handleSubmitTeam: ({team}: {team: Team}) => void;
+    handleSubmitTeam: ({ team }: { team: Team }) => void;
 }
 
 
@@ -21,12 +21,17 @@ export const MyPokemonProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const { data: pokemons, isLoading, error } = useMyPokemon({ enabled: true });
     const [teamSelected, setTeamSelected] = useState<"teamAlpha" | "teamBeta" | "teamGamma">("teamAlpha");
     const [myCollection, setMyCollection] = useState<string[]>(() => {
+        if (typeof window !== "undefined") {
             const saved = localStorage.getItem("pokemon-collection");
             return saved ? JSON.parse(saved) : pokemons ? pokemons.map((p) => p.id) : [];
+        }
+    });
+    const updatePokemonTeam = useUpdatePokemonTeam();
+    const handleSubmitTeam = ({ team }: { team: Team }) => {
+        updatePokemonTeam.mutate({
+            teamName: teamSelected,
+            team: team.slots.filter((s) => s.pokemonId !== null).map((s) => s.pokemonId as string)
         });
-
-    const handleSubmitTeam = ({team}: {team: Team}) => {
-        
     }
     return (
         <MyPokemonContext.Provider value={{

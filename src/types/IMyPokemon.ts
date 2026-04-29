@@ -1,6 +1,11 @@
 export interface IMyPokemon {
     id: string;
     nickname: string | null;
+    pokemonId: string;
+    teamAlpha: boolean;
+    teamBeta: boolean;
+    teamGamma: boolean;
+    userId: string;
     pokemon: {
         id: string;
         name: string;

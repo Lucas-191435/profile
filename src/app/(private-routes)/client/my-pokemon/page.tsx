@@ -59,14 +59,12 @@ const MyPokemonPage = () => {
     isLoading: contextLoading,
     error,
     myCollection,
-    teamSelected, setTeamSelected
+    teamSelected, setTeamSelected,
+    handleSubmitTeam
   } = useMyPokemonContext();
   const [isEditTeam, setIsEditTeam] = useState(false);
   const myPokemon = pokemons || [];
-  const [teams, setTeams] = useState<Team[]>(() => {
-    const saved = localStorage.getItem("pokemon-teams");
-    return saved ? JSON.parse(saved) : defaultTeams;
-  });
+  const [teams, setTeams] = useState<Team[]>([...defaultTeams]);
 
   const [editTeam, setEditTeam] = useState<Team | null>(null);
 
@@ -82,6 +80,38 @@ const MyPokemonPage = () => {
   useEffect(() => {
     localStorage.setItem("pokemon-teams", JSON.stringify(teams));
   }, [teams]);
+
+  useEffect(() => {
+    if (pokemons) {
+      const teamApha = pokemons?.filter((p) => p.teamAlpha === true).map((p) => p.id) || [];
+      const teamBeta = pokemons?.filter((p) => p.teamBeta === true).map((p) => p.id) || [];
+      const teamGamma = pokemons?.filter((p) => p.teamGamma === true).map((p) => p.id) || [];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTeams([
+        {
+          name: "Time Alpha",
+          slots: [
+            ...teamApha.map((id) => ({ pokemonId: id, moves: [] })),
+            ...Array(6 - teamApha.length).fill({ pokemonId: null, moves: [] })
+          ],
+        },
+        {
+          name: "Time Beta",
+          slots: [
+            ...teamBeta.map((id) => ({ pokemonId: id, moves: [] })),
+            ...Array(6 - teamBeta.length).fill({ pokemonId: null, moves: [] })
+          ],
+        },
+        {
+          name: "Time Gamma",
+          slots: [
+            ...teamGamma.map((id) => ({ pokemonId: id, moves: [] })),
+            ...Array(6 - teamGamma.length).fill({ pokemonId: null, moves: [] })
+          ],
+        },
+      ]);
+    }
+  }, [pokemons]);
 
   useEffect(() => {
     localStorage.setItem("pokemon-collection", JSON.stringify(myCollection));
@@ -102,7 +132,6 @@ const MyPokemonPage = () => {
   };
 
   const removeSlotPokemon = (teamIdx: number, slotIdx: number) => {
-    console.log("removeSlotPokemon", teamIdx, slotIdx);
     setTeams((prev) => {
       const next = JSON.parse(JSON.stringify(prev)) as Team[];
       next[teamIdx].slots[slotIdx] = { pokemonId: null, moves: [] };
@@ -153,6 +182,7 @@ const MyPokemonPage = () => {
 
   const handleSubmitEditTeam = () => {
     console.log("Edit team", currentTeam.slots);
+    handleSubmitTeam({ team: currentTeam });
     setIsEditTeam(false);
   }
 
@@ -242,8 +272,10 @@ const MyPokemonPage = () => {
                         if (poke) {
                           setSelectedSlotIdx(isSelected ? null : sIdx);
                         } else {
-                          setAddSlotIdx(sIdx);
-                          setAddDialogOpen(true);
+                          if (isEditTeam) {
+                            setAddSlotIdx(sIdx);
+                            setAddDialogOpen(true);
+                          }
                         }
                       }}
                     >

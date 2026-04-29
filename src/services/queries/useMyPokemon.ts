@@ -13,6 +13,7 @@ export const useMyPokemon = ({ enabled = false }: { enabled?: boolean }) => {
                     data: IMyPokemon[]
                 }
             } = await api.get(`/my-pokemon`).request;
+
             return response.data.data || [];
         },
         enabled, // Desabilita a consulta por padrão
@@ -50,6 +51,29 @@ export const useLeavePokemon = () => {
         },
         onError: (error: AxiosError<{ success: boolean, error: string }>) => {
             console.log("Erro ao remover Pokémon:", error.response?.data);
+        }
+    });
+};
+
+export const useUpdatePokemonTeam = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: {
+            teamName: string;
+            team: string[]
+        }): Promise<any> => {
+            const response = await api.put(`/my-pokemon/update-team`, 
+                data
+            ).request;
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-pokemon"] });
+            successToast({ description: "Pokémon atualizado com sucesso" });
+        },
+        onError: (error: AxiosError<{ success: boolean, error: string }>) => {
+            console.log("Erro ao atualizar Pokémon:", error.response?.data);
         }
     });
 };
