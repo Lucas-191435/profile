@@ -66,12 +66,12 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     useEffect(() => {
-        if (!sounds.bgm.playing()) {
-            sounds.bgm.play();
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setIsBgmPlaying(true);
+        // if (!sounds.bgm.playing()) {
+        //     sounds.bgm.play();
+        //     // eslint-disable-next-line react-hooks/set-state-in-effect
+        //     setIsBgmPlaying(true);
 
-        }
+        // }
     }, []);
 
     useEffect(() => {

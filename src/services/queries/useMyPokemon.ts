@@ -13,6 +13,7 @@ export const useMyPokemon = ({ enabled = false }: { enabled?: boolean }) => {
                     data: IMyPokemon[]
                 }
             } = await api.get(`/my-pokemon`).request;
+
             return response.data.data || [];
         },
         enabled, // Desabilita a consulta por padrão
@@ -23,16 +24,56 @@ export const useCreatePokemon = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (newPokemon: any): Promise<any> => {
-            const response = await api.post("/my-pokemon/capture", newPokemon).request;
+        mutationFn: async (capturatedPokemon: { id: string, nickname: string }): Promise<any> => {
+            const response = await api.post("/my-pokemon/capture", capturatedPokemon).request;
             return response.data;
         },
         onSuccess: () => {
-             queryClient.invalidateQueries({ queryKey: ["my-pokemon"] });
-             successToast({ description: "Pokémon capturado" });
+            queryClient.invalidateQueries({ queryKey: ["my-pokemon"] });
         },
-            onError: (error: AxiosError<{success: boolean, error: string}>) => {
+        onError: (error: AxiosError<{ success: boolean, error: string }>) => {
             console.log("Erro ao capturar Pokémon:", error.response?.data);
-            }
+        }
+    });
+};
+
+export const useLeavePokemon = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (pokemonId: string): Promise<any> => {
+            const response = await api.delete(`/my-pokemon/leave/${pokemonId}`).request;
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-pokemon"] });
+            successToast({ description: "Pokémon removido com sucesso" });
+        },
+        onError: (error: AxiosError<{ success: boolean, error: string }>) => {
+            console.log("Erro ao remover Pokémon:", error.response?.data);
+        }
+    });
+};
+
+export const useUpdatePokemonTeam = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: {
+            teamName: string;
+            team: string[]
+        }): Promise<any> => {
+            const response = await api.put(`/my-pokemon/update-team`, 
+                data
+            ).request;
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-pokemon"] });
+            successToast({ description: "Pokémon atualizado com sucesso" });
+        },
+        onError: (error: AxiosError<{ success: boolean, error: string }>) => {
+            console.log("Erro ao atualizar Pokémon:", error.response?.data);
+        }
     });
 };

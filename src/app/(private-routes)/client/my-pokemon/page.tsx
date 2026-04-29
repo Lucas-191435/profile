@@ -9,9 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Plus, X, Swords, Shield, Zap, Users } from "lucide-react";
+import { Plus, X, Swords, Shield, Users, Sparkles, Edit, XSquare } from "lucide-react";
 import ContainerSidebar from "@/components/shared/ContainerSidebar";
 import { useMyPokemon } from "@/services/queries/useMyPokemon";
+
+import { useMyPokemonContext } from "@/context/MyPokemonContext";
+import MyCollection from "./ui/MyCollection";
+import MyPokemonSkeleton from "./ui/MyPokemonSkeleton";
+import { sounds } from "@/utils/sounds";
+import { Team } from "@/types/IMyPokemon";
 
 
 const typeColors: Record<string, string> = {
@@ -22,14 +28,17 @@ const typeColors: Record<string, string> = {
   dark: "bg-gray-700", steel: "bg-gray-500",
 };
 
-interface TeamSlot {
-  pokemonId: string | null;
-  moves: string[];
+
+const teamsName = {
+  "Time Alpha": "teamAlpha",
+  "Time Beta": "teamBeta",
+  "Time Gamma": "teamGamma",
 }
 
-interface Team {
-  name: string;
-  slots: TeamSlot[];
+const teamsIdx = {
+  "teamAlpha": 0,
+  "teamBeta": 1,
+  "teamGamma": 2,
 }
 
 const emptyTeam = (name: string): Team => ({
@@ -37,8 +46,6 @@ const emptyTeam = (name: string): Team => ({
   slots: Array.from({ length: 6 }, () => ({ pokemonId: null, moves: [] })),
 });
 
-const spriteUrl = (id: number) =>
-  `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 
 const defaultTeams: Team[] = [
   emptyTeam("Time Alpha"),
@@ -46,18 +53,22 @@ const defaultTeams: Team[] = [
   emptyTeam("Time Gamma"),
 ];
 const MyPokemonPage = () => {
-  const { data, isLoading, error } = useMyPokemon({ enabled: true });
-  const myPokemon = data || [];
-  console.log("My Pokemon:", myPokemon);
-  const [teams, setTeams] = useState<Team[]>(() => {
-    const saved = localStorage.getItem("pokemon-teams");
-    return saved ? JSON.parse(saved) : defaultTeams;
-  });
+  // const { data, isLoading, error } = useMyPokemon({ enabled: true });
+  const {
+    pokemons,
+    isLoading: contextLoading,
+    error,
+    myCollection,
+    teamSelected, setTeamSelected,
+    handleSubmitTeam
+  } = useMyPokemonContext();
+  const [isEditTeam, setIsEditTeam] = useState(false);
+  const myPokemon = pokemons || [];
+  const [teams, setTeams] = useState<Team[]>([...defaultTeams]);
 
-  const [myCollection, setMyCollection] = useState<string[]>(() => {
-    const saved = localStorage.getItem("pokemon-collection");
-    return saved ? JSON.parse(saved) : myPokemon ? myPokemon.map((p) => p.id) : [];
-  });
+  const [editTeam, setEditTeam] = useState<Team | null>(null);
+
+
 
   const [selectedTeamIdx, setSelectedTeamIdx] = useState(0);
   const [selectedSlotIdx, setSelectedSlotIdx] = useState<number | null>(null);
@@ -69,6 +80,38 @@ const MyPokemonPage = () => {
   useEffect(() => {
     localStorage.setItem("pokemon-teams", JSON.stringify(teams));
   }, [teams]);
+
+  useEffect(() => {
+    if (pokemons) {
+      const teamApha = pokemons?.filter((p) => p.teamAlpha === true).map((p) => p.id) || [];
+      const teamBeta = pokemons?.filter((p) => p.teamBeta === true).map((p) => p.id) || [];
+      const teamGamma = pokemons?.filter((p) => p.teamGamma === true).map((p) => p.id) || [];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTeams([
+        {
+          name: "Time Alpha",
+          slots: [
+            ...teamApha.map((id) => ({ pokemonId: id, moves: [] })),
+            ...Array(6 - teamApha.length).fill({ pokemonId: null, moves: [] })
+          ],
+        },
+        {
+          name: "Time Beta",
+          slots: [
+            ...teamBeta.map((id) => ({ pokemonId: id, moves: [] })),
+            ...Array(6 - teamBeta.length).fill({ pokemonId: null, moves: [] })
+          ],
+        },
+        {
+          name: "Time Gamma",
+          slots: [
+            ...teamGamma.map((id) => ({ pokemonId: id, moves: [] })),
+            ...Array(6 - teamGamma.length).fill({ pokemonId: null, moves: [] })
+          ],
+        },
+      ]);
+    }
+  }, [pokemons]);
 
   useEffect(() => {
     localStorage.setItem("pokemon-collection", JSON.stringify(myCollection));
@@ -104,12 +147,6 @@ const MyPokemonPage = () => {
     });
   };
 
-  const toggleCollection = (id: string) => {
-    setMyCollection((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
   const currentTeam = teams[selectedTeamIdx];
   const selectedSlot =
     selectedSlotIdx !== null ? currentTeam.slots[selectedSlotIdx] : null;
@@ -122,86 +159,129 @@ const MyPokemonPage = () => {
 
     ]
     : [];
+
+  if (contextLoading) {
+    return <MyPokemonSkeleton />;
+  }
+
+  const handleTeam = (team: string) => {
+    console.log("handleTeam", team, teamSelected);
+    if (teamSelected !== team) {
+      console.log("Selected team", team);
+      sounds.clickPagination.play();
+      setTeamSelected(team as "teamAlpha" | "teamBeta" | "teamGamma");
+    }
+  }
+
+  const handleEditTeam = () => {
+    const teamidx = teamsIdx[teamSelected as keyof typeof teamsIdx];
+    console.log("Edit team", teamidx);
+    setEditTeam(teams[teamidx]);
+    setIsEditTeam(true);
+  }
+
+  const handleSubmitEditTeam = () => {
+    console.log("Edit team", currentTeam.slots);
+    handleSubmitTeam({ team: currentTeam });
+    setIsEditTeam(false);
+  }
+
+  const handleCancelEditTeam = () => {
+    console.log("Edit team", currentTeam.slots);
+
+    setTeams((prev) => {
+      const next = JSON.parse(JSON.stringify(prev)) as Team[];
+      next[selectedTeamIdx] = editTeam || emptyTeam(currentTeam.name);
+      return next;
+    });
+    setEditTeam(null);
+    setIsEditTeam(false);
+  }
+
   return (
     <ContainerSidebar className="p-4 lg:p-8 space-y-6">
-        <h1 className="font-display text-2xl font-bold tracking-wide flex items-center gap-2">
-          <Users className="w-6 h-6 text-primary" /> Meu Pokémon
-        </h1>
+      <h1 className="font-display text-2xl font-bold tracking-wide flex items-center gap-2">
+        <Users className="w-6 h-6 text-primary" /> Meu Pokémon
+      </h1>
 
-        {/* Collection */}
-        <section>
-          <h2 className="font-display text-lg font-semibold mb-3 text-muted-foreground">Minha Coleção</h2>
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
-            {myPokemon.map((p) => {
-              const owned = myCollection.includes(p.id);
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => toggleCollection(p.id)}
-                  className={`relative rounded-lg border p-1 transition-all hover:scale-105 ${owned
-                      ? "border-primary/50 bg-card"
-                      : "border-border/30 bg-card/30 opacity-40 grayscale"
-                    }`}
-                >
-                  <img src={p.pokemon.img1} alt={p.pokemon.name} className="w-full aspect-square object-contain" />
-                  <span className="block text-[10px] font-body text-center truncate">{p.pokemon.name}</span>
-                  {owned && (
-                    <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-primary" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+      {/* Collection */}
+      <MyCollection />
 
-        <Separator className="bg-border/50" />
+      <Separator className="bg-border/50" />
 
-        {/* Teams */}
-        <section>
-          <h2 className="font-display text-lg font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-            <Shield className="w-5 h-5" /> Montar Times
-          </h2>
-          <Tabs
-            value={String(selectedTeamIdx)}
-            onValueChange={(v) => {
+      {/* Teams */}
+      <section>
+        <h2 className="font-display text-lg font-semibold mb-3 text-muted-foreground flex items-center gap-2">
+          <Shield className="w-5 h-5" /> Montar Times
+        </h2>
+        <Tabs
+          value={String(selectedTeamIdx)}
+          onValueChange={(v) => {
+            if (!isEditTeam) {
+              console.log("Selected team idx", v);
               setSelectedTeamIdx(Number(v));
               setSelectedSlotIdx(null);
-            }}
-          >
+              handleTeam(teamsName[teams[Number(v)].name as keyof typeof teamsName]);
+            }
+          }}
+        >
+          <div className="flex row items-center justify-between">
+
             <TabsList className="bg-card/60 border border-border/50">
-              {teams.map((t, i) => (
-                <TabsTrigger key={i} value={String(i)} className="font-display text-xs tracking-wider">
+              {teams.map((t: { name: string }, i) => (
+                <TabsTrigger key={i} value={String(i)} className="font-display text-xs tracking-wider" onClick={() => handleTeam(teamsName[t.name as keyof typeof teamsName])}>
                   {t.name}
                 </TabsTrigger>
               ))}
             </TabsList>
 
-            {teams.map((team, tIdx) => (
-              <TabsContent key={tIdx} value={String(tIdx)} className="mt-4">
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                  {team.slots.map((slot, sIdx) => {
-                    const poke = slot.pokemonId ? getPokemon(slot.pokemonId) : null;
-                    const isSelected = selectedSlotIdx === sIdx;
-                    return (
-                      <div
-                        key={sIdx}
-                        className={`relative rounded-xl border-2 transition-all cursor-pointer min-h-[140px] flex flex-col items-center justify-center p-2 ${isSelected
-                            ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
-                            : poke
-                              ? "border-border/50 bg-card hover:border-primary/40"
-                              : "border-dashed border-border/40 bg-card/30 hover:border-primary/30"
-                          }`}
-                        onClick={() => {
-                          if (poke) {
-                            setSelectedSlotIdx(isSelected ? null : sIdx);
-                          } else {
+            {!isEditTeam &&
+              <Button size="sm" className="font-body glow-red" onClick={handleEditTeam}>
+                <Edit className="mr-2 h-4 w-4" /> Editar
+              </Button>
+            }
+
+            {isEditTeam && (
+              <div className="flex row gap-2">
+                <Button size="sm" className="font-body glow-red" onClick={handleCancelEditTeam}>
+                  <XSquare className="mr-2 h-4 w-4" /> cancelar
+                </Button>
+                <Button size="sm" className="font-body glow-green bg-grass hover:bg-grass/70 cursor-pointer" onClick={handleSubmitEditTeam}>
+                  <Edit className="mr-2 h-4 w-4" /> salvar
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {teams.map((team, tIdx) => (
+            <TabsContent key={tIdx} value={String(tIdx)} className="mt-4">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                {team.slots.map((slot, sIdx) => {
+                  const poke = slot.pokemonId ? getPokemon(slot.pokemonId) : null;
+                  const isSelected = selectedSlotIdx === sIdx;
+                  return (
+                    <div
+                      key={sIdx}
+                      className={`relative rounded-xl border-2 transition-all cursor-pointer min-h-[140px] flex flex-col items-center justify-center p-2 ${isSelected
+                        ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
+                        : poke
+                          ? "border-border/50 bg-card hover:border-primary/40"
+                          : "border-dashed border-border/40 bg-card/30 hover:border-primary/30"
+                        }`}
+                      onClick={() => {
+                        if (poke) {
+                          setSelectedSlotIdx(isSelected ? null : sIdx);
+                        } else {
+                          if (isEditTeam) {
                             setAddSlotIdx(sIdx);
                             setAddDialogOpen(true);
                           }
-                        }}
-                      >
-                        {poke ? (
-                          <>
+                        }
+                      }}
+                    >
+                      {poke ? (
+                        <>
+                          {isEditTeam && (
                             <button
                               className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive/80 flex items-center justify-center hover:bg-destructive z-10"
                               onClick={(e) => {
@@ -212,51 +292,52 @@ const MyPokemonPage = () => {
                             >
                               <X className="w-3 h-3 text-destructive-foreground" />
                             </button>
-                            <img
-                              src={poke.pokemon.img1}
-                              alt={poke.pokemon.name}
-                              className="w-16 h-16 object-contain drop-shadow-lg"
-                            />
-                            <span className="font-body text-xs font-semibold mt-1">{poke.pokemon.name}</span>
-                            <div className="flex gap-0.5 mt-1">
-                              {poke.pokemon.types.split(",").map((t) => (
-                                <span key={t} className={`${typeColors[t]} w-2 h-2 rounded-full`} />
-                              ))}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                            <Plus className="w-8 h-8" />
-                            <span className="text-[10px] font-body">Adicionar</span>
+                          )}
+                          <img
+                            src={poke.pokemon.img1}
+                            alt={poke.nickname || poke.pokemon.name}
+                            className="w-16 h-16 object-contain drop-shadow-lg"
+                          />
+                          <span className="font-body text-xs font-semibold mt-1">{poke.nickname || poke.pokemon.name}</span>
+                          <div className="flex gap-0.5 mt-1">
+                            {poke.pokemon.types.split(",").map((t) => (
+                              <span key={t} className={`${typeColors[t]} w-2 h-2 rounded-full`} />
+                            ))}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Selected Pokemon Moves */}
-                {selectedPokemon && selectedSlot && selectedSlotIdx !== null && (
-                  <div className="mt-6 p-4 rounded-xl border border-primary/30 bg-card/80">
-                    <div className="flex items-center gap-3 mb-4">
-                      <img
-                        src={selectedPokemon.pokemon.img1}
-                        alt={selectedPokemon.pokemon.name}
-                        className="w-12 h-12 object-contain"
-                      />
-                      <div>
-                        <h3 className="font-display font-bold text-sm">{selectedPokemon.pokemon.name}</h3>
-                        <div className="flex gap-1">
-                          {selectedPokemon.pokemon.types.split(",").map((t) => (
-                            <Badge key={t} className={`${typeColors[t]} text-[10px] uppercase`}>{t}</Badge>
-                          ))}
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                          <Plus className="w-8 h-8" />
+                          <span className="text-[10px] font-body">Adicionar</span>
                         </div>
-                      </div>
-                      <Swords className="w-5 h-5 text-primary ml-auto" />
-                      <span className="font-display text-xs text-muted-foreground">Movimentos</span>
+                      )}
                     </div>
+                  );
+                })}
+              </div>
 
-                    {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {/* Selected Pokemon Moves */}
+              {selectedPokemon && selectedSlot && selectedSlotIdx !== null && (
+                <div className="mt-6 p-4 rounded-xl border border-primary/30 bg-card/80">
+                  <div className="flex items-center gap-3 mb-4">
+                    <img
+                      src={selectedPokemon.pokemon.img1}
+                      alt={selectedPokemon.pokemon.name}
+                      className="w-12 h-12 object-contain"
+                    />
+                    <div>
+                      <h3 className="font-display font-bold text-sm">{selectedPokemon.pokemon.name}</h3>
+                      <div className="flex gap-1">
+                        {selectedPokemon.pokemon.types.split(",").map((t) => (
+                          <Badge key={t} className={`${typeColors[t]} text-[10px] uppercase`}>{t}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <Swords className="w-5 h-5 text-primary ml-auto" />
+                    <span className="font-display text-xs text-muted-foreground">Movimentos</span>
+                  </div>
+
+                  {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {Array.from({ length: 4 }).map((_, mIdx) => {
                       const moveName = selectedSlot.moves[mIdx] || null;
                       const moveData = moveName
@@ -292,58 +373,58 @@ const MyPokemonPage = () => {
                       );
                     })}
                   </div> */}
-                  </div>
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
-        </section>
+                </div>
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
 
-        {/* Add Pokemon Dialog */}
-        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-          <DialogContent className="bg-card border-border/50 max-w-md">
-            <DialogHeader>
-              <DialogTitle className="font-display">Escolher Pokémon</DialogTitle>
-              <DialogDescription>Selecione um Pokémon da sua coleção para esse slot.</DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="h-[300px] pr-2">
-              <div className="grid grid-cols-3 gap-2">
-                {myPokemon
-                  .filter((p) => myCollection.includes(p.id))
-                  .map((p) => {
-                    const alreadyInTeam = currentTeam.slots.some((s) => s.pokemonId === p.id);
-                    return (
-                      <button
-                        key={p.id}
-                        disabled={alreadyInTeam}
-                        onClick={() => {
-                          if (addSlotIdx !== null) {
-                            setSlotPokemon(selectedTeamIdx, addSlotIdx, p.id);
-                            setAddDialogOpen(false);
-                          }
-                        }}
-                        className={`rounded-lg border p-2 flex flex-col items-center transition-all ${alreadyInTeam
-                            ? "opacity-30 cursor-not-allowed border-border/20"
-                            : "border-border/50 bg-background/50 hover:border-primary/50 hover:bg-primary/5"
-                          }`}
-                      >
-                        <img src={p.pokemon.img1} alt={p.pokemon.name} className="w-14 h-14 object-contain" />
-                        <span className="font-body text-xs font-semibold">{p.pokemon.name}</span>
-                        <div className="flex gap-0.5 mt-0.5">
-                          {p.pokemon.types.split(",").map((t) => (
-                            <span key={t} className={`${typeColors[t]} w-1.5 h-1.5 rounded-full`} />
-                          ))}
-                        </div>
-                      </button>
-                    );
-                  })}
-              </div>
-            </ScrollArea>
-          </DialogContent>
-        </Dialog>
+      {/* Add Pokemon Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="bg-card border-border/50 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Escolher Pokémon</DialogTitle>
+            <DialogDescription>Selecione um Pokémon da sua coleção para esse slot.</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[300px] pr-2">
+            <div className="grid grid-cols-3 gap-2">
+              {myPokemon
+                .filter((p) => myCollection.includes(p.id))
+                .map((p) => {
+                  const alreadyInTeam = currentTeam.slots.some((s) => s.pokemonId === p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      disabled={alreadyInTeam}
+                      onClick={() => {
+                        if (addSlotIdx !== null) {
+                          setSlotPokemon(selectedTeamIdx, addSlotIdx, p.id);
+                          setAddDialogOpen(false);
+                        }
+                      }}
+                      className={`rounded-lg border p-2 flex flex-col items-center transition-all ${alreadyInTeam
+                        ? "opacity-30 cursor-not-allowed border-border/20"
+                        : "border-border/50 bg-background/50 hover:border-primary/50 hover:bg-primary/5"
+                        }`}
+                    >
+                      <img src={p.pokemon.img1} alt={p.pokemon.name} className="w-14 h-14 object-contain" />
+                      <span className="font-body text-xs font-semibold">{p.pokemon.name}</span>
+                      <div className="flex gap-0.5 mt-0.5">
+                        {p.pokemon.types.split(",").map((t) => (
+                          <span key={t} className={`${typeColors[t]} w-1.5 h-1.5 rounded-full`} />
+                        ))}
+                      </div>
+                    </button>
+                  );
+                })}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
-        {/* Move Selection Dialog */}
-        {/* <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
+      {/* Move Selection Dialog */}
+      {/* <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
         <DialogContent className="bg-card border-border/50 max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display">Escolher Movimento</DialogTitle>

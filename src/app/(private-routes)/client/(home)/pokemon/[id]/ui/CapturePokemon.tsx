@@ -23,17 +23,21 @@ const CapturePokemon = ({ pokemon }: { pokemon: { id: string, name: string } }) 
         console.log("Capturando Pokémon:", pokemon, "com apelido:", nickname);
         createPokemon.mutate({ id: pokemon.id, nickname }, {
             onSuccess: () => {
-                setNickname("");
-                setCaptureOpen(false);
+                clearAndClose();
+                successToast({ description: "Pokémon capturado" });
             },
             onError: (error: AxiosError<{ success: boolean, error: string }>) => {
-                setNickname("");
-                setCaptureOpen(false);
+                clearAndClose();
                 const errorMessage = error.response?.data?.error || "Erro ao capturar Pokémon";
                 infoToast({ description: errorMessage });
             }
         });
     };
+
+    const clearAndClose = () => {
+        setNickname("");
+        setCaptureOpen(false);
+    }
 
 
 

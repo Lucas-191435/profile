@@ -1,0 +1,159 @@
+// import { Badge } from "@/components/ui/badge";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import { Plus, X, Swords, Shield, Zap, Users } from "lucide-react";
+// import { useMyPokemonContext } from "@/context/MyPokemonContext";
+
+// const typeColors: Record<string, string> = {
+//   fire: "bg-red-500", water: "bg-blue-500", grass: "bg-green-500", electric: "bg-yellow-500",
+//   normal: "bg-gray-400", poison: "bg-purple-500", ground: "bg-amber-600", fairy: "bg-pink-400",
+//   bug: "bg-lime-500", psychic: "bg-pink-500", flying: "bg-indigo-300", fighting: "bg-orange-700",
+//   rock: "bg-amber-800", ghost: "bg-purple-800", ice: "bg-cyan-300", dragon: "bg-indigo-700",
+//   dark: "bg-gray-700", steel: "bg-gray-500",
+// };
+// const TeamsPokemon = () => {
+//   return (
+//       <section>
+//         <h2 className="font-display text-lg font-semibold mb-3 text-muted-foreground flex items-center gap-2">
+//           <Shield className="w-5 h-5" /> Montar Times
+//         </h2>
+//         <Tabs
+//           value={String(selectedTeamIdx)}
+//           onValueChange={(v) => {
+//             setSelectedTeamIdx(Number(v));
+//             setSelectedSlotIdx(null);
+//           }}
+//         >
+//           <TabsList className="bg-card/60 border border-border/50">
+//             {teams.map((t, i) => (
+//               <TabsTrigger key={i} value={String(i)} className="font-display text-xs tracking-wider">
+//                 {t.name}
+//               </TabsTrigger>
+//             ))}
+//           </TabsList>
+
+//           {teams.map((team, tIdx) => (
+//             <TabsContent key={tIdx} value={String(tIdx)} className="mt-4">
+//               <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+//                 {team.slots.map((slot, sIdx) => {
+//                   const poke = slot.pokemonId ? getPokemon(slot.pokemonId) : null;
+//                   const isSelected = selectedSlotIdx === sIdx;
+//                   return (
+//                     <div
+//                       key={sIdx}
+//                       className={`relative rounded-xl border-2 transition-all cursor-pointer min-h-[140px] flex flex-col items-center justify-center p-2 ${isSelected
+//                         ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
+//                         : poke
+//                           ? "border-border/50 bg-card hover:border-primary/40"
+//                           : "border-dashed border-border/40 bg-card/30 hover:border-primary/30"
+//                         }`}
+//                       onClick={() => {
+//                         if (poke) {
+//                           setSelectedSlotIdx(isSelected ? null : sIdx);
+//                         } else {
+//                           setAddSlotIdx(sIdx);
+//                           setAddDialogOpen(true);
+//                         }
+//                       }}
+//                     >
+//                       {poke ? (
+//                         <>
+//                           <button
+//                             className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive/80 flex items-center justify-center hover:bg-destructive z-10"
+//                             onClick={(e) => {
+//                               e.stopPropagation();
+//                               removeSlotPokemon(tIdx, sIdx);
+//                               if (isSelected) setSelectedSlotIdx(null);
+//                             }}
+//                           >
+//                             <X className="w-3 h-3 text-destructive-foreground" />
+//                           </button>
+//                           <img
+//                             src={poke.pokemon.img1}
+//                             alt={poke.nickname || poke.pokemon.name}
+//                             className="w-16 h-16 object-contain drop-shadow-lg"
+//                           />
+//                           <span className="font-body text-xs font-semibold mt-1">{poke.nickname || poke.pokemon.name}</span>
+//                           <div className="flex gap-0.5 mt-1">
+//                             {poke.pokemon.types.split(",").map((t) => (
+//                               <span key={t} className={`${typeColors[t]} w-2 h-2 rounded-full`} />
+//                             ))}
+//                           </div>
+//                         </>
+//                       ) : (
+//                         <div className="flex flex-col items-center gap-1 text-muted-foreground">
+//                           <Plus className="w-8 h-8" />
+//                           <span className="text-[10px] font-body">Adicionar</span>
+//                         </div>
+//                       )}
+//                     </div>
+//                   );
+//                 })}
+//               </div>
+
+//               {/* Selected Pokemon Moves */}
+//               {selectedPokemon && selectedSlot && selectedSlotIdx !== null && (
+//                 <div className="mt-6 p-4 rounded-xl border border-primary/30 bg-card/80">
+//                   <div className="flex items-center gap-3 mb-4">
+//                     <img
+//                       src={selectedPokemon.pokemon.img1}
+//                       alt={selectedPokemon.pokemon.name}
+//                       className="w-12 h-12 object-contain"
+//                     />
+//                     <div>
+//                       <h3 className="font-display font-bold text-sm">{selectedPokemon.pokemon.name}</h3>
+//                       <div className="flex gap-1">
+//                         {selectedPokemon.pokemon.types.split(",").map((t) => (
+//                           <Badge key={t} className={`${typeColors[t]} text-[10px] uppercase`}>{t}</Badge>
+//                         ))}
+//                       </div>
+//                     </div>
+//                     <Swords className="w-5 h-5 text-primary ml-auto" />
+//                     <span className="font-display text-xs text-muted-foreground">Movimentos</span>
+//                   </div>
+
+//                   {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+//                     {Array.from({ length: 4 }).map((_, mIdx) => {
+//                       const moveName = selectedSlot.moves[mIdx] || null;
+//                       const moveData = moveName
+//                         ? allMoves.find((m) => m.name === moveName)
+//                         : null;
+//                       return (
+//                         <button
+//                           key={mIdx}
+//                           onClick={() => {
+//                             setEditMoveIdx(mIdx);
+//                             setMoveDialogOpen(true);
+//                           }}
+//                           className={`rounded-lg border p-3 text-left transition-all hover:border-primary/50 ${
+//                             moveName
+//                               ? "border-border/50 bg-background/50"
+//                               : "border-dashed border-border/30 bg-background/20"
+//                           }`}
+//                         >
+//                           {moveName ? (
+//                             <>
+//                               <span className="font-body text-xs font-semibold block">{moveName}</span>
+//                               {moveData && (
+//                                 <div className="flex items-center gap-1 mt-1">
+//                                   <span className={`${typeColors[moveData.type]} w-2 h-2 rounded-full`} />
+//                                   <span className="text-[10px] text-muted-foreground uppercase">{moveData.type}</span>
+//                                 </div>
+//                               )}
+//                             </>
+//                           ) : (
+//                             <span className="text-[10px] text-muted-foreground">Slot {mIdx + 1}</span>
+//                           )}
+//                         </button>
+//                       );
+//                     })}
+//                   </div> */}
+//                 </div>
+//               )}
+//             </TabsContent>
+//           ))}
+//         </Tabs>
+//       </section>
+//   )
+// }
+
+// export default TeamsPokemon;
