@@ -57,11 +57,11 @@ const CapturePokemon = ({ pokemon }: { pokemon: { id: string, name: string } }) 
                 <DialogContent className="bg-card border-border">
                     <DialogHeader>
                         <DialogTitle className="font-display tracking-wide capitalize">Capturar {pokemon.name}</DialogTitle>
-                        <DialogDescription className="font-body text-muted-foreground">
+                        {/* <DialogDescription className="font-body text-muted-foreground">
                             Dê um apelido ao seu novo Pokémon (opcional).
-                        </DialogDescription>
+                        </DialogDescription> */}
                     </DialogHeader>
-                    <div className="space-y-2 py-2">
+                    {/* <div className="space-y-2 py-2">
                         <Label htmlFor="nickname" className="font-body">Apelido</Label>
                         <Input
                             id="nickname"
@@ -70,7 +70,7 @@ const CapturePokemon = ({ pokemon }: { pokemon: { id: string, name: string } }) 
                             onChange={(e) => setNickname(e.target.value)}
                             className="font-body"
                         />
-                    </div>
+                    </div> */}
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setCaptureOpen(false)} className="font-body">Cancelar</Button>
                         <Button onClick={handleCapture} className="font-body glow-red">
