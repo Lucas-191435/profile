@@ -77,3 +77,25 @@ export const useUpdatePokemonTeam = () => {
         }
     });
 };
+
+export const useUpdatePokemonMoves = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: {
+            myPokemonId: string;
+            teamName: string;
+            moves: string[];
+        }): Promise<any> => {
+            const response = await api.put(`/my-pokemon/update-moves`, data).request;
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-pokemon"] });
+            successToast({ description: "Movimentos atualizados com sucesso" });
+        },
+        onError: (error: AxiosError<{ success: boolean, error: string }>) => {
+            console.log("Erro ao atualizar movimentos:", error.response?.data);
+        }
+    });
+};

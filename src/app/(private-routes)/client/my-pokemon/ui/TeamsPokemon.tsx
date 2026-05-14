@@ -217,7 +217,7 @@ const TeamsPokemon = () => {
                                                     : "border-dashed border-border/40 bg-card/30 hover:border-primary/30"
                                                 }`}
                                             onClick={() => {
-                                                if (poke) {
+                                                if (poke && !isEditMove) {
                                                     setSelectedSlotIdx(isSelected ? null : sIdx);
                                                 } else {
                                                     if (isEditTeam) {

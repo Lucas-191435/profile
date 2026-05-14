@@ -11,6 +11,7 @@ export interface IMyPokemon {
     userId: string;
     pokemon: {
         id: string;
+        pokeId: number;
         name: string;
         img1: string;
         types: string;
