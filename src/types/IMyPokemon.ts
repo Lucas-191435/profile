@@ -5,9 +5,13 @@ export interface IMyPokemon {
     teamAlpha: boolean;
     teamBeta: boolean;
     teamGamma: boolean;
+    teamAlphaMove: string[] | null;
+    teamBetaMove: string[] | null;
+    teamGammaMove: string[] | null;
     userId: string;
     pokemon: {
         id: string;
+        pokeId: number;
         name: string;
         img1: string;
         types: string;

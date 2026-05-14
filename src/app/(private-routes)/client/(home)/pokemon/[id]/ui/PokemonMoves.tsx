@@ -20,7 +20,7 @@ const PokemonMoves = ({number, pokemonName}: {number: number, pokemonName: strin
     const [fetchMoves, setFetchMoves] = useState(false);
     // const [learnedMoves, setLearnedMoves] = useState([]);
     // const [teachableMoves, setTeachableMoves] = useState([]);
-    const { data: pokemonMoves, isLoading, error } = usePokeMove({ number, enabled: true },); 
+    const { data: pokemonMoves, isLoading, error } = usePokeMove({ number, enabled: true }); 
 
     const handleGetMoves = () => {
         setFetchMoves(true);
