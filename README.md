@@ -175,24 +175,6 @@ A aplicação utiliza um design system consistente baseado em:
 - **Design Responsivo**: Otimizado para desktop e mobile
 - **Tema Consistente**: Paleta de cores e tipografia unificada
 
-## 🤝 Contribuindo
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto está sob a licença [MIT](LICENSE).
-
-## 📞 Contato
-
-- 📧 Email: [seu-email@exemplo.com]
-- 💼 LinkedIn: [Seu Perfil LinkedIn]
-- 🐙 GitHub: [Seu GitHub]
-
 ---
 
 **Desenvolvido com ❤️ usando Next.js e TypeScript**
