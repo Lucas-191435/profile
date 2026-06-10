@@ -2,7 +2,7 @@
 'use client';
 
 import { Separator } from "@/components/ui/separator";
-import {  X, Users} from "lucide-react";
+import { Users} from "lucide-react";
 import ContainerSidebar from "@/components/shared/ContainerSidebar";
 
 import { useMyPokemonContext } from "@/context/MyPokemonContext";
