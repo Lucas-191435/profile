@@ -29,8 +29,8 @@ export const useGetPokemons = (params: UseGetPokemonsParams) => {
                 query: params.query || "",
                 types: params.types ? params.types.join(",") : ""
             });
-            const response: { data: { data: IGetPokemons } } = await api.get(`/pokemon?${queryString.toString()}`).request;
-            return response.data.data;
+            const response: { data:  IGetPokemons  } = await api.get(`/pokemon?${queryString.toString()}`).request;
+            return response.data;
         },
         staleTime: Infinity, // Dados nunca ficam obsoletos
         enabled: true, // Always enabled to fetch data on mount
@@ -49,8 +49,8 @@ export const useFindUniquePokemon = (params: UseFindUniquePokemonParams) => {
             id: params.id
         }],
         queryFn: async (): Promise<IPokemonComplete> => {
-            const response: { data: { data: IPokemonComplete } } = await api.get(`/pokemon/${params.id}`).request;
-            return response.data.data;
+            const response: { data:  IPokemonComplete  } = await api.get(`/pokemon/${params.id}`).request;
+            return response.data;
         },
         staleTime: Infinity, // Dados nunca ficam obsoletos
         enabled: true, // Always enabled to fetch data on mount

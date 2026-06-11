@@ -9,12 +9,10 @@ export const useMyPokemon = ({ enabled = false }: { enabled?: boolean }) => {
         queryKey: ["my-pokemon"],
         queryFn: async (): Promise<IMyPokemon[]> => {
             const response: {
-                data: {
-                    data: IMyPokemon[]
-                }
+                data:  IMyPokemon[]
             } = await api.get(`/my-pokemon`).request;
 
-            return response.data.data || [];
+            return response.data || [];
         },
         enabled, // Desabilita a consulta por padrão
     });
@@ -25,7 +23,10 @@ export const useCreatePokemon = () => {
 
     return useMutation({
         mutationFn: async (capturatedPokemon: { id: string, nickname: string }): Promise<any> => {
-            const response = await api.post("/my-pokemon/capture", capturatedPokemon).request;
+            const response = await api.post("/my-pokemon/capture", {
+                pokemonId: capturatedPokemon.id,
+                nickname: capturatedPokemon.nickname
+            }).request;
             return response.data;
         },
         onSuccess: () => {
@@ -63,7 +64,7 @@ export const useUpdatePokemonTeam = () => {
             teamName: string;
             team: string[]
         }): Promise<any> => {
-            const response = await api.put(`/my-pokemon/update-team`, 
+            const response = await api.put(`/my-pokemon/update-team`,
                 data
             ).request;
             return response.data;

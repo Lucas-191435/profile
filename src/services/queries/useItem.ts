@@ -24,8 +24,8 @@ export const useGetItems = (params: UseGetItemParams) => {
                 query: params.query || "",
                 categoryId: params.categoryId?.toString() || ""
             });
-            const response: { data: { data: IGetItems } } = await api.get(`/items?${queryString.toString()}`).request;
-            return response.data.data;
+            const response: { data:  IGetItems  } = await api.get(`/items?${queryString.toString()}`).request;
+            return response.data;
         },
         staleTime: Infinity, // Dados nunca ficam obsoletos
         enabled: true, // Always enabled to fetch data on mount

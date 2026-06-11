@@ -7,13 +7,11 @@ export const usePokeMove = ({ number, enabled = false }: { number: number, enabl
         queryFn: async (): Promise<IPokeMove[]> => {
             const response: {
                 data: {
-                    data: {
                         name: string;
                         moves: IPokeMove[];
-                    }
                 }
             } = await api.get(`/pokemon-move/${number}`).request;
-            return response.data.data.moves;
+            return response.data.moves;
         },
         enabled, // Desabilita a consulta por padrão
     });

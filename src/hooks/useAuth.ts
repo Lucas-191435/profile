@@ -123,7 +123,7 @@ const useAuth = () => {
       const result = await request;
 
 
-      replace("/reset-password?token=" + result.data.data);
+      replace("/reset-password?token=" + result.data);
     } catch (err) {
       console.error(err);
     }

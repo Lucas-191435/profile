@@ -18,7 +18,7 @@ export const nextAuthOptions: NextAuthOptions = {
       async authorize(credentials, req) {
         try {
           const response = await axios.post<{
-            data: IUser;
+            user: IUser;
             token: string;
             message: string;
           }>(
@@ -35,8 +35,7 @@ export const nextAuthOptions: NextAuthOptions = {
               },
             },
           );
-
-          const { data: user } = response.data || {};
+          const { user } = response.data || {};
 
           if (user && response.status === 200) {
             return {
