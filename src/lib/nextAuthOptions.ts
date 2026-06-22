@@ -22,7 +22,7 @@ export const nextAuthOptions: NextAuthOptions = {
             token: string;
             message: string;
           }>(
-            process.env.baseUrl + "/auth/login",
+            (process.env.BASE_URL ?? process.env.baseUrl) + "/auth/login",
             {
               email: credentials?.email,
               password: credentials?.password,
@@ -35,6 +35,9 @@ export const nextAuthOptions: NextAuthOptions = {
               },
             },
           );
+
+          console.log("Login successful:", response.data);
+
           const { user } = response.data || {};
 
           if (user && response.status === 200) {

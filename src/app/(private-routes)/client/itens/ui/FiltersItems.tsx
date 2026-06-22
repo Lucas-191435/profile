@@ -7,7 +7,7 @@ type FiltersItemsProps = {
     activeCategory: number;
     setActiveCategory: (category: number) => void;
     search: string;
-    setSearch: (search: string) => void;
+    setSearch: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 const FiltersItems = ({ activeCategory, setActiveCategory, search, setSearch }: FiltersItemsProps) => {
     return (
@@ -17,7 +17,7 @@ const FiltersItems = ({ activeCategory, setActiveCategory, search, setSearch }: 
                 <Input
                     placeholder="Buscar item..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => setSearch(e)}
                     className="pl-10 bg-secondary border-border font-body"
                 />
             </div>

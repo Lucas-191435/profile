@@ -3,22 +3,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Mantemos apenas o MODE como arg se o seu build precisar dele
       args:
-        - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-        - NEXTAUTH_URL=${NEXTAUTH_URL}
-        - BASE_URL=${BASE_URL}
         - MODE=${MODE}
     image: web-pokedex:latest
     container_name: web-pokedex
     ports:
-      - "3000:3000"
+      - "4000:4000"
     env_file:
-      - .env
+      - .env.production.local
     environment:
       - NODE_ENV=production
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/auth/providers"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/api/auth/providers"]
       interval: 30s
       timeout: 10s
       retries: 3
