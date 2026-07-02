@@ -15,9 +15,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Variáveis necessárias apenas no build
-
 ARG MODE=production
+ARG BASE_URL
 
+ENV BASE_URL=$BASE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
