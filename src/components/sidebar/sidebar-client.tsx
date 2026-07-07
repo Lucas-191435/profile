@@ -94,8 +94,20 @@ function SidebarContent({
               (item.path !== "/client" &&
                 pathname?.startsWith(`${item.path}/`));
 
+            const getTourAttribute = (href: string) => {
+                if (href === "/client") return "home";
+                if (href === "/client/my-pokemon") return "my-pokemon";
+                if (href === "/client/profile") return "profile";
+                if (href === "/client/itens") return "itens";
+                if (href === "/client/regions") return "regions";
+                return undefined;
+              };
+
+            const tourAttribute = getTourAttribute(item.path);
+
             return (
               <Link
+                data-tour={tourAttribute}
                 key={item.path}
                 href={item.path}
                 onClick={onNavClick}

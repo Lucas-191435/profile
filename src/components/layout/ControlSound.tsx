@@ -6,7 +6,7 @@ const ControlSound = () => {
     const { isBgmPlaying, toggleBgm } = useSoundContext();
 
     return (
-        <Button variant="outline" size="sm" className="m-2" onClick={toggleBgm}>
+        <Button variant="outline" size="sm" className="m-2" onClick={toggleBgm} data-tour="btn-sound">
             {isBgmPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
         </Button>
     );

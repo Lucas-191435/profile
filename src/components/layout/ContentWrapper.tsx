@@ -11,7 +11,6 @@ import Link from "next/link";
 export function ContentWrapper({ children }: { children: React.ReactNode }) {
   // const isMobile = useIsMobile();
   const { isCollapsed } = useSidebarCollapse();
-
   // if (isMobile) {
   //   return <>{children}</>;
   // }
@@ -24,7 +23,7 @@ export function ContentWrapper({ children }: { children: React.ReactNode }) {
       )}
     >
       <div className="min-h-[81px] border-b border-sidebar-border flex items-center justify-end px-4">
-        <Link href="/curriculum" rel="noopener noreferrer" className="border-1 m-2 p-1 rounded-sm cursor-pointer">
+        <Link href="/curriculum" rel="noopener noreferrer" className="border-1 m-2 p-1 rounded-sm cursor-pointer"  data-tour="btn-curriculum">
           <File className="w-6 h-6 text-primary" />
         </Link>
         <SocialLinks />

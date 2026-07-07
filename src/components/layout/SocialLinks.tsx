@@ -11,7 +11,7 @@ const SocialLinks = () => {
 
     return (
         <>
-            <div className="bg-white m-2 p-1 rounded-sm cursor-pointer">
+            <div className="bg-white m-2 p-1 rounded-sm cursor-pointer" data-tour="btn-github">
                 <a href="https://github.com/Lucas-191435"
                     target="_blank" rel="noopener noreferrer">
                     <Image
@@ -22,7 +22,7 @@ const SocialLinks = () => {
                     />
                 </a>
             </div>
-            <div className="bg-white m-2 p-1 rounded-sm cursor-pointer">
+            <div className="bg-white m-2 p-1 rounded-sm cursor-pointer" data-tour="btn-linkedin">
                 <a href="https://www.linkedin.com/in/lucas-fer-san/"
                     target="_blank" rel="noopener noreferrer">
                     <Image

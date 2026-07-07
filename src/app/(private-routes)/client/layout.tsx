@@ -1,6 +1,7 @@
 import { ContentWrapper } from "@/components/layout/ContentWrapper";
 
 import { Sidebar } from "@/components/sidebar/sidebar-client";
+import { TourGuide } from "@/components/tour/TourGuide";
 import { SoundProvider } from "@/context/SoundContext";
 import { SidebarCollapseProvider } from "@/hooks/useSidebarCollapse";
 import { nextAuthOptions } from "@/lib/nextAuthOptions";
@@ -16,6 +17,7 @@ const ClientLayout = async ({ children }: { children: React.ReactNode }) => {
   return (
     // <main>
     <SidebarCollapseProvider>
+       <TourGuide />
       <SoundProvider>
         <Sidebar />
         <ContentWrapper>
