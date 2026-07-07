@@ -5,7 +5,9 @@ import { cn } from "@/lib/utils";
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
 import { sounds } from "@/utils/sounds";
 import ControlSound from "./ControlSound";
-
+import SocialLinks from "./SocialLinks";
+import { File } from "lucide-react";
+import Link from "next/link";
 export function ContentWrapper({ children }: { children: React.ReactNode }) {
   // const isMobile = useIsMobile();
   const { isCollapsed } = useSidebarCollapse();
@@ -22,6 +24,10 @@ export function ContentWrapper({ children }: { children: React.ReactNode }) {
       )}
     >
       <div className="min-h-[81px] border-b border-sidebar-border flex items-center justify-end px-4">
+        <Link href="/curriculum" rel="noopener noreferrer" className="border-1 m-2 p-1 rounded-sm cursor-pointer">
+          <File className="w-6 h-6 text-primary" />
+        </Link>
+        <SocialLinks />
         <ControlSound />
       </div>
       <div className="w-full mx-auto p-4">{children}</div>
