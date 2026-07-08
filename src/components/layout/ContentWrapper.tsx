@@ -6,8 +6,9 @@ import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
 import { sounds } from "@/utils/sounds";
 import ControlSound from "./ControlSound";
 import SocialLinks from "./SocialLinks";
-import { File } from "lucide-react";
+import { File, Route } from "lucide-react";
 import Link from "next/link";
+import { Button } from "../ui/button";
 export function ContentWrapper({ children }: { children: React.ReactNode }) {
   // const isMobile = useIsMobile();
   const { isCollapsed } = useSidebarCollapse();
@@ -23,6 +24,9 @@ export function ContentWrapper({ children }: { children: React.ReactNode }) {
       )}
     >
       <div className="min-h-[81px] border-b border-sidebar-border flex items-center justify-end px-4">
+        <Button className="border-1 m-2 p-1 rounded-sm cursor-pointer" onClick={() => window.resetTour() }>
+          <Route className="w-6 h-6 text-white" />
+        </Button>
         <Link href="/curriculum" rel="noopener noreferrer" className="border-1 m-2 p-1 rounded-sm cursor-pointer"  data-tour="btn-curriculum">
           <File className="w-6 h-6 text-primary" />
         </Link>
