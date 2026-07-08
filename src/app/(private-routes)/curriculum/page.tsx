@@ -65,7 +65,7 @@ const Curriculo = () => {
     <div className="min-h-screen bg-background text-foreground">
       {/* Top bar */}
       <header className="h-14 border-b border-border flex items-center px-4 lg:px-8">
-        <Button variant="ghost" size="sm" onClick={() => router.push("/")} className="gap-2 font-body">
+        <Button variant="ghost" size="sm" onClick={() => router.push("/")} className="gap-2 font-body cursor-pointer hover:text-white">
           <ArrowLeft className="w-4 h-4" /> Voltar ao Pokédex
         </Button>
       </header>
@@ -123,7 +123,7 @@ const Curriculo = () => {
                 <Badge
                   key={skill}
                   variant="outline"
-                  className="font-body text-xs border-primary/30 text-foreground hover:bg-primary/10 transition-colors cursor-default"
+                  className="font-body text-sm border-primary/30 text-foreground hover:bg-primary/10 transition-colors cursor-default"
                 >
                   {skill}
                 </Badge>
@@ -139,7 +139,7 @@ const Curriculo = () => {
               <User className="w-5 h-5 text-primary" /> Sobre Mim
             </CardTitle>
           </CardHeader>
-          <CardContent className="font-body text-sm text-muted-foreground leading-relaxed space-y-3">
+          <CardContent className="font-body text-md text-muted-foreground leading-relaxed space-y-3">
             <p>
               Desenvolvedor Full Stack com foco em aplicações web escaláveis, atuando no desenvolvimento de soluções
               completas do front-end ao back-end. Experiência com React, Next.js, Angular, Node.js (Express, NestJS),
@@ -168,15 +168,15 @@ const Curriculo = () => {
               <CardContent className="p-5 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                   <h3 className="font-display text-base font-bold tracking-wide">{exp.company}</h3>
-                  <Badge variant="outline" className="w-fit text-[10px] font-body">
+                  <Badge variant="outline" className="w-fit text-[14px] font-body">
                     {exp.period}
                   </Badge>
                 </div>
-                <p className="font-body text-sm text-primary font-semibold">{exp.role}</p>
+                <p className="font-body text-md text-primary font-semibold">{exp.role}</p>
                 <Separator className="bg-border/30" />
                 <ul className="space-y-1.5">
                   {exp.highlights.map((h, hIdx) => (
-                    <li key={hIdx} className="font-body text-sm text-muted-foreground flex gap-2">
+                    <li key={hIdx} className="font-body text-md text-muted-foreground flex gap-2">
                       <span className="text-primary mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full bg-primary inline-block" />
                       <span>{h}</span>
                     </li>
@@ -198,7 +198,7 @@ const Curriculo = () => {
               <h3 className="font-display text-base font-bold tracking-wide">
                 Tecnólogo em ADS - Análise e Desenvolvimento de Sistemas
               </h3>
-              <p className="font-body text-sm text-muted-foreground">
+              <p className="font-body text-md text-muted-foreground">
                 Centro Universitário Facens · 2019 – 2021
               </p>
             </CardContent>
@@ -207,7 +207,7 @@ const Curriculo = () => {
 
         {/* Footer */}
         <footer className="pt-8 pb-4 text-center">
-          <Button variant="outline" onClick={() => router.push("/")} className="gap-2 font-body">
+          <Button variant="outline" onClick={() => router.push("/")} className="gap-2 font-body cursor-pointer hover:text-white">
             <ArrowLeft className="w-4 h-4" /> Voltar ao Pokédex
           </Button>
         </footer>
