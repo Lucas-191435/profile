@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { CallBackProps, STATUS, Step } from "react-joyride";
+import { EventData, STATUS, Step } from "react-joyride";
 interface UseTourProps {
   steps: Step[];
   autoStart?: boolean;
@@ -18,7 +18,7 @@ export const useTour = ({
   const [tourCompleted, setTourCompleted] = useState(false);
 
   const handleJoyrideCallback = useCallback(
-    (data: CallBackProps) => {
+    (data: EventData) => {
       const { status, action, index, type, lifecycle } = data;
       // eslint-disable-next-line no-console
       // console.log("Joyride callback data:", data);

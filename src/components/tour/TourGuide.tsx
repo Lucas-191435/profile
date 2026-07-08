@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Joyride from "react-joyride";
+import {Joyride} from "react-joyride";
 import { useTour } from "@/hooks/useTour";
 import { useFirstTimeUser } from "@/hooks/useFirstTimeUser";
 import { tourSteps, tourConfig } from "@/constants/tourSteps";
@@ -72,20 +72,21 @@ export const TourGuide: React.FC<TourGuideProps> = ({ autoStart = true }) => {
   return (
     <>
       <Joyride
-        callback={handleJoyrideCallback}
+        onEvent={handleJoyrideCallback}
         continuous={tourConfig.continuous}
-        hideCloseButton={tourConfig.hideCloseButton}
+        options={{ 
+          buttons: ['skip', 'primary', 'close', 'back'], 
+          showProgress: true,
+          overlayClickAction: 'next',
+          dismissKeyAction: 'close',
+          blockTargetInteraction: true,
+        }}
         run={run}
         scrollToFirstStep={tourConfig.scrollToFirstStep}
-        showProgress={tourConfig.showProgress}
-        showSkipButton={tourConfig.showSkipButton}
         stepIndex={stepIndex}
         steps={steps}
         styles={tourConfig.styles}
         locale={tourConfig.locale}
-        disableOverlayClose={tourConfig.disableOverlayClose}
-        disableCloseOnEsc={tourConfig.disableCloseOnEsc}
-        spotlightClicks={tourConfig.spotlightClicks}
       />
 
       {/* Botão para re-iniciar o tour (apenas para usuários que já completaram) */}
