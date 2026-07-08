@@ -22,6 +22,7 @@ export function ContentWrapper({ children }: { children: React.ReactNode }) {
         "transition-all duration-300 ease-spring",
         isCollapsed ? "md:ml-20 md:w-[calc(100%-5rem)]" : "md:ml-64 md:w-[calc(100%-16rem)]"
       )}
+       data-tour="welcome"
     >
       <div className="min-h-[81px] border-b border-sidebar-border flex items-center justify-end px-4">
         <Button className="border-1 m-2 p-1 rounded-sm cursor-pointer" onClick={() => window.resetTour() }>

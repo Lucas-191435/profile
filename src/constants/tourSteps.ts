@@ -74,6 +74,45 @@ export const tourSteps: Step[] = [
   },
 ];
 
+export const mobileTourSteps: Step[] = [
+  {
+    target: "[data-tour='welcome']",
+    title: "Bem-vindo ao Projeto Portfólio",
+    content:
+      "Bem-vindo ao meu projeto de portfólio! Aqui você encontrará uma visão geral das minhas habilidades, projetos e experiências. Explore e descubra mais sobre o meu trabalho.",
+    // disableBeacon: true,
+    placement: "center",
+  },
+  {
+    target: "[data-tour='btn-sound']",
+    title: "Botão de Som",
+    content:
+      "Ative ou desative os sons do aplicativo conforme sua preferência. Isso permite uma experiência personalizada e confortável enquanto você explora o portfólio.",
+    placement: "bottom",
+  },
+  {
+    target: "[data-tour='btn-linkedin']",
+    title: "LinkedIn",
+    content:
+      "Aqui você pode acessar meu perfil no LinkedIn para conhecer minha trajetória profissional.",
+    placement: "bottom",
+  },
+  {
+    target: "[data-tour='btn-github']",
+    title: "GitHub",
+    content:
+      "Aqui você pode acessar meu perfil no GitHub para explorar meus projetos.",
+    placement: "bottom",
+  },
+  {
+    target: "[data-tour='btn-curriculum']",
+    title: "Currículo",
+    content:
+      "Aqui você pode acessar meu currículo para conhecer minha formação e experiências profissionais.",
+    placement: "bottom",
+  },
+];
+
 export const tourConfig = {
   continuous: true,
   run: false,

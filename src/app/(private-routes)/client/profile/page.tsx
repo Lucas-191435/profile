@@ -128,7 +128,7 @@ const ClientHomePage = () => {
 
   console.log("Teams", teams);
   return (
-    <ContainerSidebar className="flex justify-center items-center ">
+    <ContainerSidebar className="flex justify-center items-center px-1">
       <div className="space-y-6 w-full max-w-8xl">
         <h1 className="font-display text-2xl font-bold tracking-wide flex items-center gap-2">
           <UserCircle2 className="w-6 h-6 text-primary" /> Meu Perfil
@@ -249,14 +249,14 @@ const ClientHomePage = () => {
               <Shield className="w-5 h-5 text-primary" /> Minhas Equipes
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 md:px-4 px-1">
             {teams.length === 0 && (
               <p className="text-sm text-muted-foreground font-body">Nenhuma equipe montada ainda.</p>
             )}
             {teams.map((team, i) => {
               const filled = team.slots.filter((s) => s.pokemonId !== null);
               return (
-                <div key={i} className="rounded-lg border border-border/50 bg-background/40 p-2 px-3">
+                <div key={i} className="rounded-lg border border-border/50 bg-background/40 p-2 px-">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-display text-sm font-semibold tracking-wide">{team.name}</h3>
                     <Badge variant="outline" className="text-[16px]">{filled.length}/6</Badge>
@@ -272,7 +272,7 @@ const ClientHomePage = () => {
                         >
                           {poke ? (
                             <>
-                              <img src={spriteUrl(poke.pokemon.pokeId)} alt={poke.pokemon.name} className="w-full h-3/4 object-contain" />
+                              <img src={spriteUrl(poke.pokemon.pokeId)} alt={poke.pokemon.name} className="min-w-full min-h-3/4 object-contain" />
                               <span className="text-[9px] font-body truncate w-full text-center">{poke.pokemon.name}</span>
                               <div className="flex gap-0.5">
                                 {JSON.parse(poke.pokemon.types).map((t:string) => (

@@ -104,7 +104,7 @@ const PaginationControls = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-4 px-4" data-tour="welcome">
+    <div className="flex flex-col items-center justify-center space-y-4 px-4">
        <div className="sm:hidden flex flex-wrap items-center justify-center gap-1 sm:gap-2 w-full max-w-4xl overflow-x-auto pb-2">
         {/* Página anterior */}
         <Button

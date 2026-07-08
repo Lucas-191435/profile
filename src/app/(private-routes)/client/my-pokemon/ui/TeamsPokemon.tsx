@@ -173,7 +173,7 @@ const TeamsPokemon = () => {
                         }
                     }}
                 >
-                    <div className="flex row items-center justify-between">
+                    <div className="flex md:flex-row flex-col items-center justify-between gap-2">
 
                         <TabsList className="bg-card/60 border border-border/50">
                             {teams.map((t: { name: string }, i) => (
@@ -190,7 +190,7 @@ const TeamsPokemon = () => {
                         }
 
                         {isEditTeam && !isEditMove && (
-                            <div className="flex row gap-2">
+                            <div className="flex row gap-2 ">
                                 <Button size="sm" className="font-body glow-red" onClick={handleCancelEditTeam}>
                                     <XSquare className="mr-2 h-4 w-4" /> cancelar
                                 </Button>

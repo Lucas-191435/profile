@@ -114,7 +114,7 @@ const PokemonMoveList = ({ selectedPokemon, isEditMove, isEditTeam, setEditMove 
             )}
 
             {isEditMove && (
-              <div className="flex row gap-2">
+              <div className="flex md:flex-row flex-col gap-2">
                 <Button size="sm" className="font-body glow-red" onClick={handleCancelEditMove}>
                   <XSquare className="mr-2 h-4 w-4" /> Cancelar
                 </Button>

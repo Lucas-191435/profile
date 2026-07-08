@@ -4,9 +4,10 @@ import React from "react";
 import {Joyride} from "react-joyride";
 import { useTour } from "@/hooks/useTour";
 import { useFirstTimeUser } from "@/hooks/useFirstTimeUser";
-import { tourSteps, tourConfig } from "@/constants/tourSteps";
+import { tourSteps, tourConfig, mobileTourSteps } from "@/constants/tourSteps";
 // Importar utilitários para desenvolvimento (expõe funções globais)
 import "@/utils/tourUtils";
+import { useIsMobile } from "@/hooks/useMobile";
 
 interface TourGuideProps {
   autoStart?: boolean;
@@ -21,6 +22,7 @@ export const TourGuide: React.FC<TourGuideProps> = ({ autoStart = true }) => {
     resetTour: resetFirstTime,
   } = useFirstTimeUser();
 
+  const isMobile = useIsMobile();
   const {
     run,
     stepIndex,
@@ -30,7 +32,7 @@ export const TourGuide: React.FC<TourGuideProps> = ({ autoStart = true }) => {
     resetTour,
     steps,
   } = useTour({
-    steps: tourSteps,
+    steps: isMobile ? mobileTourSteps : tourSteps,
     autoStart: false, // Sempre false aqui, controlamos via isFirstTime
     onTourComplete: markTourAsCompleted,
   });

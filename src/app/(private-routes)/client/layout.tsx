@@ -20,7 +20,7 @@ const ClientLayout = async ({ children }: { children: React.ReactNode }) => {
        <TourGuide />
       <SoundProvider>
         <Sidebar />
-        <ContentWrapper>
+        <ContentWrapper >
           {children}
         </ContentWrapper>
       </SoundProvider>
