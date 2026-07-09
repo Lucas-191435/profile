@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 // import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
+import { useChatCollapse } from "@/hooks/useChatCollapse";
 import { sounds } from "@/utils/sounds";
 import ControlSound from "./ControlSound";
 import SocialLinks from "./SocialLinks";
@@ -12,15 +13,20 @@ import { Button } from "../ui/button";
 export function ContentWrapper({ children }: { children: React.ReactNode }) {
   // const isMobile = useIsMobile();
   const { isCollapsed } = useSidebarCollapse();
+  const { isCollapsed: isChatCollapsed } = useChatCollapse();
   // if (isMobile) {
   //   return <>{children}</>;
   // }
+
+  console.log("isCollapsed", isCollapsed);
+  console.log("isChatCollapsed", isChatCollapsed);
 
   return (
     <div
       className={cn(
         "transition-all duration-300 ease-spring",
-        isCollapsed ? "md:ml-20 md:w-[calc(100%-5rem)]" : "md:ml-64 md:w-[calc(100%-16rem)]"
+        isCollapsed ? "md:ml-20" : "md:ml-64",
+        isChatCollapsed ? "lg:mr-84" : "",
       )}
        data-tour="welcome"
     >
