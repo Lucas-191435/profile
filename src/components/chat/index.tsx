@@ -5,6 +5,8 @@ import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 import { Suspense } from "react";
+import InputMessage from "./InputMessage";
+import ChatContent from "./ChatContent";
 export function Chat() {
     const { isCollapsed, toggleCollapse } = useSidebarCollapse();
     const { isCollapsed: isChatCollapsed, toggleCollapse: toggleChatCollapse } = useChatCollapse();
@@ -19,11 +21,11 @@ export function Chat() {
         }
     };
 
-    
-      // Mobile: Sheet drawer
-      if (isMobile) {
+
+    // Mobile: Sheet drawer
+    if (isMobile) {
         return null
-      }
+    }
     // Desktop: Fixed sidebar
     return (
         isChatCollapsed ? (
@@ -39,26 +41,25 @@ export function Chat() {
 
                     }}
                 >
-                 <div className="w-full  flex justify-end">
-                    <button
-                        onClick={handleToggleChat}
-                        className={cn(
-                            "flex h-8 w-8 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-all hover:bg-sidebar-accent hover:text-sidebar-foreground hover:shadow-lg hover:shadow-primary/20",
-                            "border-2",
-                            isChatCollapsed && " top-6",
-                            "hidden md:flex border border-primary/30 cursor-pointer",
-                        )}
-                    >   
-                    
-                            <ChevronRight className="h-4 w-4 text-primary drop-shadow-sm" />
-                    </button>
-                 </div>
-                 <div className="border-2 w-full h-full rounded-lg flex items-center justify-center">
-                    <h3>Chat em desenvolvimento</h3>
-                 </div>
-                 <div className="border-2 w-full h-20 rounded-lg">
+                    <div className="w-full h-[10%]  flex justify-end">
+                        <button
+                            onClick={handleToggleChat}
+                            className={cn(
+                                "flex h-8 w-8 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-all hover:bg-sidebar-accent hover:text-sidebar-foreground hover:shadow-lg hover:shadow-primary/20",
+                                "border-2",
+                                isChatCollapsed && " top-6",
+                                "hidden md:flex border border-primary/30 cursor-pointer",
+                            )}
+                        >
 
-                 </div>
+                            <ChevronRight className="h-4 w-4 text-primary drop-shadow-sm" />
+                        </button>
+                    </div>
+
+                    <ChatContent />
+                    <div className="border-2 w-full max-h-[10%] rounded-lg p-1 flex items-center justify-center">
+                        <InputMessage />
+                    </div>
                 </aside>
             </Suspense>
         ) : (
