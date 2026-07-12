@@ -4,10 +4,13 @@ export interface IMessageSender {
 }
 
 export interface IMessage {
-  id: string | number;
-  createdAt: string;
-  sender: IMessageSender;
+  id: string;
   text: string;
+  createdAt: string;
+  userId: string;
+  chatRoomId: string;
+  deletedAt: string | null;
+  sender: IMessageSender;
 }
 
 export interface IMessagesPage {
@@ -16,15 +19,9 @@ export interface IMessagesPage {
   hasMore: boolean;
 }
 
-export interface TeamSlot {
-  pokemonId: string | null;
-}
-
-export interface Team {
-  slots: TeamSlot[];
-}
-
-export interface IChat {
+export interface IChatRoom {
   id: string;
   name: string;
+  createdAt: string;
+  updatedAt: string;
 }

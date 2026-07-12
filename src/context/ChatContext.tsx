@@ -1,11 +1,11 @@
 'use client';
-import { useMessages, useSendMessage, useUpdatePokemonTeam } from "@/services/queries/useChat";
-import { IMessage, IMessagesPage, Team, TeamSlot } from "@/types/IChat";
-import { useContext, createContext, useState, useCallback } from "react";
+import { useMessages, useGlobalRoom } from "@/services/queries/useChat";
+import { IMessage, IMessagesPage } from "@/types/IChat";
+import { useContext, createContext, useState, useCallback, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useSocket } from "@/hooks/useSocket";
 
 interface ChatContextType {
-    // Mensagens
     messages: IMessage[];
     isLoadingMessages: boolean;
     isFetchingNextPage: boolean;
@@ -13,18 +13,7 @@ interface ChatContextType {
     fetchNextPage: () => void;
     sendMessage: (text: string) => void;
     isSending: boolean;
-
-    // Coleção / time
-    myCollection: string[];
-    setMyCollection: React.Dispatch<React.SetStateAction<string[]>>;
-    teamSelected: "teamAlpha" | "teamBeta" | "teamGamma";
-    setTeamSelected: React.Dispatch<React.SetStateAction<"teamAlpha" | "teamBeta" | "teamGamma">>;
-    handleSubmitTeam: ({ team }: { team: Team }) => void;
-
-    // Sessão
     currentUserId: string | undefined;
-
-    // WebSocket — preparado para quando for adicionado
     isConnected: boolean;
 }
 
@@ -32,28 +21,28 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { data: session } = useSession();
-    const [teamSelected, setTeamSelected] = useState<"teamAlpha" | "teamBeta" | "teamGamma">("teamAlpha");
-    const [myCollection, setMyCollection] = useState<string[]>(() => {
-        if (typeof window !== "undefined") {
-            const saved = localStorage.getItem("pokemon-collection");
-            return saved ? JSON.parse(saved) : [];
-        }
-        return [];
-    });
+    const { socket, connected } = useSocket();
+    const [isSending, setIsSending] = useState(false);
+    const [realtimeMessages, setRealtimeMessages] = useState<IMessage[]>([]);
 
-    // WebSocket placeholder — descomente quando instalar o pacote
-    // const wsRef = useRef<WebSocket | null>(null);
-    const [isConnected] = useState(false);
-    // useEffect(() => {
-    //     wsRef.current = new WebSocket(process.env.NEXT_PUBLIC_WS_URL!);
-    //     wsRef.current.onopen = () => setIsConnected(true);
-    //     wsRef.current.onclose = () => setIsConnected(false);
-    //     wsRef.current.onmessage = (event) => {
-    //         const msg: IMessage = JSON.parse(event.data);
-    //         queryClient.setQueryData(["messages"], (old: any) => { ... });
-    //     };
-    //     return () => wsRef.current?.close();
-    // }, []);
+    // Busca a sala global para obter o roomId necessário no send-message
+    const { data: globalRoom } = useGlobalRoom({ enabled: connected });
+    const currentRoomId = globalRoom?.id ?? null;
+
+    // Escuta mensagens em tempo real via WebSocket
+    useEffect(() => {
+        const handleNewMessage = (message: IMessage) => {
+            setRealtimeMessages((prev) => {
+                if (prev.some((m) => m.id === message.id)) return prev;
+                return [...prev, message];
+            });
+        };
+
+        socket.on("new-message", handleNewMessage);
+        return () => {
+            socket.off("new-message", handleNewMessage);
+        };
+    }, [socket]);
 
     const {
         data: messagesData,
@@ -63,33 +52,32 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchNextPage,
     } = useMessages({ enabled: true });
 
-    const sendMessageMutation = useSendMessage();
-    const updatePokemonTeam = useUpdatePokemonTeam();
-
     // API retorna páginas em ordem DESC (mais recentes primeiro).
     // Invertemos para exibir do mais antigo para o mais novo.
-    const messages: IMessage[] = messagesData?.pages
+    const historicalMessages: IMessage[] = messagesData?.pages
         .flatMap((page: IMessagesPage) => page.messages)
         .reverse() ?? [];
 
+    // Mescla histórico HTTP + mensagens em tempo real, removendo duplicatas
+    const messages: IMessage[] = [
+        ...historicalMessages,
+        ...realtimeMessages.filter(
+            (rt) => !historicalMessages.some((hm) => hm.id === rt.id),
+        ),
+    ];
+
     const sendMessage = useCallback(
         (text: string) => {
-            if (!text.trim()) return;
-            sendMessageMutation.mutate({ text });
-            // TODO: também enviar via WebSocket quando instalado
-            // wsRef.current?.send(JSON.stringify({ type: "message", text }));
+            if (!text.trim() || !currentRoomId) return;
+            setIsSending(true);
+            socket.emit(
+                "send-message",
+                { roomId: currentRoomId, message: text },
+                () => setIsSending(false),
+            );
         },
-        [sendMessageMutation],
+        [socket, currentRoomId],
     );
-
-    const handleSubmitTeam = ({ team }: { team: Team }) => {
-        updatePokemonTeam.mutate({
-            teamName: teamSelected,
-            team: team.slots
-                .filter((s: TeamSlot) => s.pokemonId !== null)
-                .map((s: TeamSlot) => s.pokemonId as string),
-        });
-    };
 
     return (
         <ChatContext.Provider
@@ -100,14 +88,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 hasNextPage: hasNextPage ?? false,
                 fetchNextPage,
                 sendMessage,
-                isSending: sendMessageMutation.isPending,
-                myCollection,
-                setMyCollection,
-                teamSelected,
-                setTeamSelected,
-                handleSubmitTeam,
+                isSending,
                 currentUserId: session?.user?.id,
-                isConnected,
+                isConnected: connected,
             }}
         >
             {children}
