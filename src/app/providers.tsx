@@ -38,7 +38,7 @@ export function Providers({ children }: ProvidersProps) {
   );
   return (
     <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {/* <ReactQueryDevtools initialIsOpen={false} /> */}
       <SessionProvider
         refetchInterval={30 * 60}
         refetchOnWindowFocus={false}

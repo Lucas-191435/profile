@@ -9,6 +9,7 @@ import { SidebarCollapseProvider } from "@/hooks/useSidebarCollapse";
 import { nextAuthOptions } from "@/lib/nextAuthOptions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { ChatProvider } from "@/context/ChatContext";
 
 const ClientLayout = async ({ children }: { children: React.ReactNode }) => {
   const session = await getServerSession(nextAuthOptions);
@@ -20,6 +21,8 @@ const ClientLayout = async ({ children }: { children: React.ReactNode }) => {
     // <main>
     <SidebarCollapseProvider>
       <ChatCollapseProvider>
+        <ChatProvider>
+
         <TourGuide />
         <SoundProvider>
           <Sidebar />
@@ -28,6 +31,7 @@ const ClientLayout = async ({ children }: { children: React.ReactNode }) => {
           </ContentWrapper>
           <Chat /> 
         </SoundProvider>
+        </ChatProvider>
       </ChatCollapseProvider>
     </SidebarCollapseProvider>
     // </main>
