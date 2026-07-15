@@ -77,7 +77,7 @@ export const TourGuide: React.FC<TourGuideProps> = ({ autoStart = true }) => {
         onEvent={handleJoyrideCallback}
         continuous={tourConfig.continuous}
         options={{ 
-          buttons: ['skip', 'primary', 'close', 'back'], 
+          buttons: ['skip', 'primary', 'back'], 
           showProgress: true,
           overlayClickAction: 'next',
           dismissKeyAction: 'close',
