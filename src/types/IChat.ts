@@ -10,7 +10,7 @@ export interface IMessage {
   userId: string;
   chatRoomId: string;
   deletedAt: string | null;
-  sender: IMessageSender;
+  user: IMessageSender;
 }
 
 export interface IMessagesPage {

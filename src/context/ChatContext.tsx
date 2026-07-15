@@ -24,7 +24,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { socket, connected } = useSocket();
     const [isSending, setIsSending] = useState(false);
     const [realtimeMessages, setRealtimeMessages] = useState<IMessage[]>([]);
-
+    // console.log("user session:", session);
     // Busca a sala global para obter o roomId necessário no send-message
     const { data: globalRoom } = useGlobalRoom({ enabled: connected });
     const currentRoomId = globalRoom?.id ?? null;
@@ -50,7 +50,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isFetchingNextPage,
         hasNextPage,
         fetchNextPage,
-    } = useMessages({ enabled: true });
+    } = useMessages({ chatId: currentRoomId ?? "", enabled: true });
 
     // API retorna páginas em ordem DESC (mais recentes primeiro).
     // Invertemos para exibir do mais antigo para o mais novo.

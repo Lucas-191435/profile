@@ -2,14 +2,14 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { IMessagesPage, IChatRoom } from "@/types/IChat";
 
-export const useMessages = ({ enabled = true }: { enabled?: boolean } = {}) => {
+export const useMessages = ({ chatId, enabled = true }: { chatId: string; enabled?: boolean }) => {
     return useInfiniteQuery({
-        queryKey: ["messages"],
+        queryKey: ["messages", chatId],
         queryFn: async ({ pageParam }: { pageParam: string | null }) => {
             const params = new URLSearchParams({ limit: "20" });
             if (pageParam) params.set("cursor", pageParam);
 
-            const response: { data: IMessagesPage } = await api.get(`/messages?${params}`).request;
+            const response: { data: IMessagesPage } = await api.get(`/chat/messages/${chatId}?${params}`).request;
             return response.data;
         },
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,

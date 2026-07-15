@@ -86,9 +86,9 @@ const ChatContent = () => {
                 <ChatMessage
                     key={mensagem.id}
                     message={mensagem.text}
-                    sender={mensagem.sender}
+                    sender={mensagem.user}
                     timestamp={mensagem.createdAt}
-                    isOwn={mensagem.sender.id === currentUserId}
+                    isOwn={mensagem.user.id === currentUserId}
                 />
             ))}
 
