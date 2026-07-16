@@ -3,7 +3,7 @@ import mascotImage from "@/assets/images/hero-pokedex.png";
 
 const Hero = () => {
     return (
-        <section className="relative rounded-2xl overflow-hidden w-full max-w-[1400px] mx-auto h-64 lg:h-80 object-cover glow-red-strong">
+        <section className="relative rounded-2xl overflow-hidden w-full max-w-[1800px] mx-auto h-64 lg:h-80 object-cover glow-red-strong">
             <Image
                 src={mascotImage}
                 alt="Pokédex"
@@ -13,8 +13,8 @@ const Hero = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent flex items-center">
                 <div className="p-8 lg:p-12 max-w-lg space-y-4">
-                    <h1 className="text-4xl font-bold">Welcome to the Pokemon App</h1>
-                    <p className="text-lg mt-2">Explore the world of Pokemon and discover your favorite creatures!</p>
+                    <h1 className="text-4xl font-bold">Bem vindo a Pokédex</h1>
+                    <p className="text-lg mt-2">Esse projeto busca mostrar minhas habilidades em desenvolvimento web 🚀</p>
                 </div>
             </div>
         </section>

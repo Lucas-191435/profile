@@ -49,7 +49,7 @@ const TeamsPokemon = () => {
     const [isEditMove, setIsEditMove] = useState(false);
     const [teams, setTeams] = useState<Team[]>([...defaultTeams]);
     const [selectedTeamIdx, setSelectedTeamIdx] = useState(0);
-    const [selectedSlotIdx, setSelectedSlotIdx] = useState<number | null>(null);
+    const [selectedSlotIdx, setSelectedSlotIdx] = useState<number | null>(pokemons?.length && pokemons.length > 0 ? 0 : null);
     const [editTeam, setEditTeam] = useState<Team | null>(null);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [addSlotIdx, setAddSlotIdx] = useState<number | null>(null);
@@ -118,9 +118,9 @@ const TeamsPokemon = () => {
     };
 
     const handleTeam = (team: string) => {
-        console.log("handleTeam", team, teamSelected);
+        // console.log("handleTeam", team, teamSelected);
         if (teamSelected !== team) {
-            console.log("Selected team", team);
+            //// console.log("Selected team", team);
             sounds.clickPagination.play();
             setTeamSelected(team as "teamAlpha" | "teamBeta" | "teamGamma");
         }
@@ -128,19 +128,19 @@ const TeamsPokemon = () => {
 
     const handleEditTeam = () => {
         const teamidx = teamsIdx[teamSelected as keyof typeof teamsIdx];
-        console.log("Edit team", teamidx);
+        // console.log("Edit team", teamidx);
         setEditTeam(teams[teamidx]);
         setIsEditTeam(true);
     }
 
     const handleSubmitEditTeam = () => {
-        console.log("Edit team", currentTeam.slots);
+        // console.log("Edit team", currentTeam.slots);
         handleSubmitTeam({ team: currentTeam });
         setIsEditTeam(false);
     }
 
     const handleCancelEditTeam = () => {
-        console.log("Edit team", currentTeam.slots);
+        // console.log("Edit team", currentTeam.slots);
 
         setTeams((prev) => {
             const next = JSON.parse(JSON.stringify(prev)) as Team[];
@@ -166,9 +166,9 @@ const TeamsPokemon = () => {
                     value={String(selectedTeamIdx)}
                     onValueChange={(v) => {
                         if (!isEditTeam && !isEditMove) {
-                            console.log("Selected team idx", v);
+                            // console.log("Selected team idx", v);
                             setSelectedTeamIdx(Number(v));
-                            setSelectedSlotIdx(null);
+                            setSelectedSlotIdx(pokemons?.length && pokemons.length > 0 ? 0 : null);
                             handleTeam(teamsName[teams[Number(v)].name as keyof typeof teamsName]);
                         }
                     }}
@@ -177,7 +177,7 @@ const TeamsPokemon = () => {
 
                         <TabsList className="bg-card/60 border border-border/50">
                             {teams.map((t: { name: string }, i) => (
-                                <TabsTrigger key={i} value={String(i)} className="font-display text-xs tracking-wider" onClick={() => handleTeam(teamsName[t.name as keyof typeof teamsName])}>
+                                <TabsTrigger key={i} value={String(i)} className="cursor-pointer font-display text-xs tracking-wider" onClick={() => handleTeam(teamsName[t.name as keyof typeof teamsName])}>
                                     {t.name}
                                 </TabsTrigger>
                             ))}
@@ -286,7 +286,6 @@ const TeamsPokemon = () => {
                     <ScrollArea className="h-[300px] pr-2">
                         <div className="grid grid-cols-3 gap-2">
                             {myPokemon
-                                .filter((p) => myCollection.includes(p.id))
                                 .map((p) => {
                                     const alreadyInTeam = currentTeam.slots.some((s) => s.pokemonId === p.id);
                                     return (
