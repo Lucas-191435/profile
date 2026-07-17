@@ -17,10 +17,18 @@ const ChatContent = () => {
     const topSentinelRef = useRef<HTMLDivElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const prevScrollHeightRef = useRef(0);
+    const isInitialLoad = useRef(true);
 
     // Rola para o fim ao receber novas mensagens
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messages.length === 0) return;
+
+        if (isInitialLoad.current) {
+            isInitialLoad.current = false;
+            bottomRef.current?.scrollIntoView({ behavior: "instant" });
+        } else {
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
     }, [messages.length]);
 
     // Salva a altura antes de buscar página anterior
@@ -59,7 +67,7 @@ const ChatContent = () => {
 
     if (isLoadingMessages) {
         return (
-            <div className="border-2 w-full h-full max-h-[80%] rounded-lg flex items-center justify-center">
+            <div className="border-2 w-full flex-1 min-h-0 rounded-lg flex items-center justify-center">
                 <p className="text-muted-foreground text-sm animate-pulse">Carregando mensagens...</p>
             </div>
         );
@@ -68,7 +76,7 @@ const ChatContent = () => {
     return (
         <div
             ref={scrollContainerRef}
-            className="border-2 w-full h-full max-h-[80%] rounded-lg overflow-y-auto scrollbar-premium flex flex-col"
+            className="border-2 w-full flex-1 min-h-0 rounded-lg overflow-y-auto scrollbar-premium flex flex-col"
         >
             <div ref={topSentinelRef} className="h-1 shrink-0" />
 

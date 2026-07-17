@@ -57,7 +57,7 @@ export function Chat() {
                     </div>
 
                     <ChatContent />
-                    <div className="border-2 w-full max-h-[10%] rounded-lg p-1 flex items-center justify-center">
+                    <div className="border-2 w-full shrink-0 rounded-lg p-1 flex items-center justify-center">
                         <InputMessage />
                     </div>
                 </aside>
