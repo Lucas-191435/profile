@@ -18,6 +18,7 @@ import {
   useRouter,
 } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 const LoginComponentPage = () => {
 
   const router = useRouter();
@@ -39,8 +40,26 @@ const LoginComponentPage = () => {
     router.push("/forgot-password");
   }
   return (
-    <div className="flex min-h-screen items-center justify-center font-sans bg-background">
+    <div
+        className="w-full max-w-md rounded-2xl p-8 border border-white/10 shadow-2xl glow-red"
+        style={{
+          backgroundColor: "hsl(220 20% 7% / 0.35)",
+          backdropFilter: "blur(16px) saturate(140%)",
+          WebkitBackdropFilter: "blur(16px) saturate(140%)",
+        }}
+      >
       <Form {...form}>
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-14 h-14 rounded-full bg-primary glow-red flex items-center justify-center mb-4">
+            <div className="w-5 h-5 rounded-full bg-primary-foreground" />
+          </div>
+          <h1 className="font-display text-3xl font-bold tracking-widest text-glow text-foreground">
+            POKÉDEX
+          </h1>
+          <p className="text-muted-foreground text-center mt-2 font-body">
+            Bem-vindo, treinador! Faça login para continuar sua jornada.
+          </p>
+        </div>
         <form onSubmit={form.handleSubmit(handleLogin)} className="w-full max-w-sm space-y-6 ">
           <FormField
             control={form.control}
@@ -52,7 +71,7 @@ const LoginComponentPage = () => {
                   <input
                     {...field}
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your email"
+                    placeholder="Entre com seu email"
                   />
                 </FormControl>
                 <FormMessage />
@@ -64,23 +83,23 @@ const LoginComponentPage = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-foreground">Password</FormLabel>
+                <FormLabel className="text-foreground">Senha</FormLabel>
                 <FormControl>
                   <input
                     {...field}
                     type="password"
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your password"
+                    placeholder="Entre com sua senha"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <button
+          <Button
             type="submit"
             className={cn(
-              "relative w-full rounded px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent transition-colors duration-500",
+              "relative w-full  px-4 py-2 text-white focus:outline-none font-display focus:ring-2 focus:ring-accent transition-colors duration-500",
               [
                 "bg-sidebar-accent text-sidebar-foreground shadow-lg shadow-primary/20",
                 "border border-primary/30 font-semibold",
@@ -90,13 +109,25 @@ const LoginComponentPage = () => {
             )}
           >
             Login
-          </button>
-          <button
+          </Button>
+          {/* <button
             onClick={handleResetPassword}
             className="mt-4 text-sm text-blue-500 hover:underline hover:cursor-pointer"
           >
             Esqueceu a senha?
-          </button>
+          </button> */}
+          <Button
+          type="button"
+          onClick={() => {
+            form.setValue("email", "teste@gmail.com");
+            form.setValue("password", "Teste123@");
+            form.handleSubmit(handleLogin)();
+          }}
+          className="w-full mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-display tracking-wider glow-red-strong animate-float"
+          size="lg"
+        >
+          Entrar com usuário TESTE
+        </Button>
         </form>
       </Form>
 
