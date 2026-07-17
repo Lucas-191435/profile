@@ -9,9 +9,9 @@ const LoginLayout = async ({ children }: { children: React.ReactNode }) => {
     redirect("/client");
   }
   return (
-    <div>
+    <>
       {children}
-    </div>
+    </>
   );
 }
 

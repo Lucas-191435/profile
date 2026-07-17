@@ -51,6 +51,12 @@
   --color-water: var(--water);
   --color-fire: var(--fire);
 
+  /* Animations */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+
   /* Radius */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -195,13 +201,29 @@
   }
 
   @keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
   }
-  50% {
-    transform: translateY(-10px);
+
+  @keyframes accordion-down {
+    from { height: 0; overflow: hidden; }
+    to { height: var(--radix-accordion-content-height); overflow: hidden; }
   }
-}
+
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); overflow: hidden; }
+    to { height: 0; overflow: hidden; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px hsl(0 85% 55% / 0.3), 0 0 60px hsl(0 85% 55% / 0.1); }
+    50% { box-shadow: 0 0 40px hsl(0 85% 55% / 0.6), 0 0 100px hsl(0 85% 55% / 0.3); }
+  }
 
 .animate-bounce-custom {
   animation: bounce 1s infinite;
