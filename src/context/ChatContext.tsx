@@ -12,6 +12,7 @@ interface ChatContextType {
     hasNextPage: boolean;
     fetchNextPage: () => void;
     sendMessage: (text: string) => void;
+    deleteMessage: (messageId: string) => void;
     isSending: boolean;
     currentUserId: string | undefined;
     isConnected: boolean;
@@ -24,6 +25,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { socket, connected } = useSocket();
     const [isSending, setIsSending] = useState(false);
     const [realtimeMessages, setRealtimeMessages] = useState<IMessage[]>([]);
+    const [deletedMessageIds, setDeletedMessageIds] = useState<Set<string>>(new Set());
     // console.log("user session:", session);
     // Busca a sala global para obter o roomId necessário no send-message
     const { data: globalRoom } = useGlobalRoom({ enabled: connected });
@@ -38,9 +40,17 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
         };
 
+        const handleDeleteMessage = (message: IMessage) => {
+            console.log("Message deleted:", message.id);
+            setDeletedMessageIds((prev) => new Set([...prev, message.id]));
+            setRealtimeMessages((prev) => prev.filter((m) => m.id !== message.id));
+        };
+
         socket.on("new-message", handleNewMessage);
+        socket.on("delete-message", handleDeleteMessage);
         return () => {
             socket.off("new-message", handleNewMessage);
+            socket.off("delete-message", handleDeleteMessage);
         };
     }, [socket]);
 
@@ -58,13 +68,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .flatMap((page: IMessagesPage) => page.messages)
         .reverse() ?? [];
 
-    // Mescla histórico HTTP + mensagens em tempo real, removendo duplicatas
+    // Mescla histórico HTTP + mensagens em tempo real, removendo duplicatas e deletadas
     const messages: IMessage[] = [
         ...historicalMessages,
         ...realtimeMessages.filter(
             (rt) => !historicalMessages.some((hm) => hm.id === rt.id),
         ),
-    ];
+    ].filter((m) => !deletedMessageIds.has(m.id));
 
     const sendMessage = useCallback(
         (text: string) => {
@@ -73,6 +83,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             socket.emit(
                 "send-message",
                 { roomId: currentRoomId, message: text },
+                () => setIsSending(false),
+            );
+        },
+        [socket, currentRoomId],
+    );
+
+     const deleteMessage = useCallback(
+        (messageId: string) => {
+            if (!messageId || !currentRoomId) return;
+            setIsSending(true);
+            socket.emit(
+                "delete-message",
+                { roomId: currentRoomId, messageId },
                 () => setIsSending(false),
             );
         },
@@ -88,6 +111,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 hasNextPage: hasNextPage ?? false,
                 fetchNextPage,
                 sendMessage,
+                deleteMessage,
                 isSending,
                 currentUserId: session?.user?.id,
                 isConnected: connected,

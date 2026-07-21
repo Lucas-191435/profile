@@ -93,6 +93,7 @@ const ChatContent = () => {
             {messages.map((mensagem) => (
                 <ChatMessage
                     key={mensagem.id}
+                    messageId={mensagem.id}
                     message={mensagem.text}
                     sender={mensagem.user}
                     timestamp={mensagem.createdAt}
