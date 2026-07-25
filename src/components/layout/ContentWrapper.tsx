@@ -10,6 +10,7 @@ import SocialLinks from "./SocialLinks";
 import { File, Route } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
+import { BattleButton } from "../BattleButton";
 export function ContentWrapper({ children }: { children: React.ReactNode }) {
   // const isMobile = useIsMobile();
   const { isCollapsed } = useSidebarCollapse();
@@ -31,6 +32,7 @@ export function ContentWrapper({ children }: { children: React.ReactNode }) {
        data-tour="welcome"
     >
       <div className="min-h-[81px] border-b border-sidebar-border flex items-center justify-end px-4">
+        <BattleButton />
         <Button className="border-1 m-2 p-1 rounded-sm cursor-pointer" onClick={() => window.resetTour() }>
           <Route className="w-6 h-6 text-white" />
         </Button>
