@@ -8,9 +8,10 @@ const FIXED_LEVEL = 50;
 interface BattleSceneProps {
   opponentPokemon: IBattlePokemon;
   myPokemon: IBattlePokemon;
+  attackingSide?: "me" | "opponent" | null;
 }
 
-export function BattleScene({ opponentPokemon, myPokemon }: BattleSceneProps) {
+export function BattleScene({ opponentPokemon, myPokemon, attackingSide }: BattleSceneProps) {
   const opponentName = opponentPokemon.myPokemon.nickname || opponentPokemon.myPokemon.pokemon.name;
   const myName = myPokemon.myPokemon.nickname || myPokemon.myPokemon.pokemon.name;
 
@@ -37,7 +38,7 @@ export function BattleScene({ opponentPokemon, myPokemon }: BattleSceneProps) {
           alt={opponentName}
           className={`w-32 h-32 md:w-44 md:h-44 object-contain drop-shadow-lg ${
             opponentPokemon.fainted ? "grayscale opacity-40" : ""
-          }`}
+          } ${attackingSide === "opponent" ? "animate-attack-shake" : ""}`}
           style={{ imageRendering: "pixelated" }}
         />
       </div>
@@ -49,7 +50,7 @@ export function BattleScene({ opponentPokemon, myPokemon }: BattleSceneProps) {
           alt={myName}
           className={`w-40 h-40 md:w-56 md:h-56 object-contain drop-shadow-lg ${
             myPokemon.fainted ? "grayscale opacity-40" : ""
-          }`}
+          } ${attackingSide === "me" ? "animate-attack-shake" : ""}`}
           style={{ imageRendering: "pixelated" }}
         />
       </div>

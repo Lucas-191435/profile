@@ -88,6 +88,8 @@ const Batalha = () => {
     currentUserId,
     myParticipant,
     opponentParticipant,
+    activeTurnEvent,
+    advanceTurnEvent,
     mySubmitted,
     opponentSubmitted,
     readyParticipantIds,
@@ -125,9 +127,26 @@ const Batalha = () => {
   );
 
   const dialogText = useMemo(() => {
-    if (!battle || battle.turnLogs.length === 0) return "";
+    if (!battle) return "";
+    // Enquanto a fila do turno está tocando, o texto acompanha o evento em exibição (na ordem
+    // de execução); esvaziada a fila, volta a mostrar o último evento persistido.
+    if (activeTurnEvent) return describeTurnLog(activeTurnEvent, battle, currentUserId);
+    if (battle.turnLogs.length === 0) return "";
     return describeTurnLog(battle.turnLogs[0].payload, battle, currentUserId);
-  }, [battle, currentUserId]);
+  }, [battle, activeTurnEvent, currentUserId]);
+
+  // Toca cada evento do turno por um tempo fixo antes de avançar pro próximo — dá tempo da
+  // animação de ataque e do texto serem lidos antes de passar pro golpe seguinte.
+  useEffect(() => {
+    if (!activeTurnEvent) return;
+    const timer = setTimeout(() => advanceTurnEvent(), 1500);
+    return () => clearTimeout(timer);
+  }, [activeTurnEvent, advanceTurnEvent]);
+
+  const attackingSide = useMemo<"me" | "opponent" | null>(() => {
+    if (!activeTurnEvent || activeTurnEvent.event !== "move" || !myParticipant) return null;
+    return activeTurnEvent.participantId === myParticipant.id ? "me" : "opponent";
+  }, [activeTurnEvent, myParticipant]);
 
   if (!isConnected || (isParticipant && !battle)) {
     return <LoadingScreen />;
@@ -204,7 +223,7 @@ const Batalha = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col px-[200px] py-[100px]">
-      <BattleScene opponentPokemon={opponentActive} myPokemon={myActive} />
+      <BattleScene opponentPokemon={opponentActive} myPokemon={myActive} attackingSide={attackingSide} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 border-t-4 border-[#404058]">
         <BattleDialogPanel

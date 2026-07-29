@@ -15,6 +15,8 @@ import {
   OpponentActionSubmittedEvent,
   SubmitActionPayload,
   TeamName,
+  TurnLogEntry,
+  TurnResolvedEvent,
 } from "@/types/IBattle";
 import { errorToast } from "@/utils/toasts";
 
@@ -70,6 +72,10 @@ interface BattleContextType {
   myParticipant: IBattleParticipant | null;
   opponentParticipant: IBattleParticipant | null;
   lastLog: IBattleTurnLog[];
+  // Fila ordenada dos eventos do turno recém-resolvido (mesma ordem de execução do backend),
+  // consumida item a item para tocar a animação/diálogo de cada ataque em sequência.
+  activeTurnEvent: TurnLogEntry | null;
+  advanceTurnEvent: () => void;
   mySubmitted: boolean;
   opponentSubmitted: boolean;
   readyParticipantIds: Set<string>;
@@ -106,6 +112,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [mySubmittedForTurn, setMySubmittedForTurn] = useState<number | null>(null);
   const [opponentSubmittedForTurn, setOpponentSubmittedForTurn] = useState<number | null>(null);
   const [iForfeited, setIForfeited] = useState(false);
+  const [turnEventQueue, setTurnEventQueue] = useState<TurnLogEntry[]>([]);
   const [lastBattleId, setLastBattleId] = useState(battleId);
   const battleRef = useRef<IBattle | null>(null);
 
@@ -145,6 +152,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   if (battleId !== lastBattleId) {
     setLastBattleId(battleId);
     if (readyParticipantIds.size > 0) setReadyParticipantIds(new Set());
+    if (turnEventQueue.length > 0) setTurnEventQueue([]);
   }
 
   const joinRoom = useCallback(async () => {
@@ -188,7 +196,10 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
 
-    const handleTurnResolved = () => {
+    const handleTurnResolved = (event: TurnResolvedEvent) => {
+      // event.log preserva a ordem de execução decidida pelo backend (prioridade do golpe +
+      // velocidade) — é a partir dela que a UI sabe quem atacou primeiro para animar em sequência.
+      setTurnEventQueue((prev) => [...prev, ...event.log]);
       void refetch();
     };
 
@@ -281,6 +292,12 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     [socket, myParticipant, refetch, battle],
   );
 
+  const activeTurnEvent = turnEventQueue[0] ?? null;
+
+  const advanceTurnEvent = useCallback(() => {
+    setTurnEventQueue((prev) => prev.slice(1));
+  }, []);
+
   const submitMove = useCallback((moveId: string) => submitAction({ type: "MOVE", moveId }), [submitAction]);
   const submitSwitch = useCallback(
     (targetPokemonId: string) => submitAction({ type: "SWITCH", targetPokemonId }),
@@ -302,6 +319,8 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         myParticipant,
         opponentParticipant,
         lastLog,
+        activeTurnEvent,
+        advanceTurnEvent,
         mySubmitted,
         opponentSubmitted,
         readyParticipantIds,
