@@ -1,6 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import type { Team } from "@/types/IMyPokemon";
+import { TeamName } from "@/types/IBattle";
 import { Swords, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,21 +13,21 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-// import { pokemonList } from "@/data/pokemon";
 import { artwork } from "@/utils/sprites";
 import typeColors from "@/utils/typesColors";
 import { useMyPokemon } from "@/services/queries/useMyPokemon";
+import { useCreateBattle } from "@/services/queries/useBattle";
 import Link from "next/link";
 
-
-
+type TeamWithName = Team & { teamName: TeamName };
 
 export function BattleButton() {
   const { data: pokemonList, isLoading, error } = useMyPokemon({ enabled: true });
-  // const navigate = useNavigate();
+  const router = useRouter();
+  const createBattle = useCreateBattle();
   const [open, setOpen] = useState(false);
   const [warnOpen, setWarnOpen] = useState(false);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [teams, setTeams] = useState<TeamWithName[]>([]);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
 
@@ -39,6 +41,7 @@ export function BattleButton() {
             setTeams([
                 {
                     name: "Time Alpha",
+                    teamName: "teamAlpha",
                     slots: [
                         ...teamApha.map((id) => ({ pokemonId: id, moves: [] })),
                         ...Array(6 - teamApha.length).fill({ pokemonId: null, moves: [] })
@@ -46,6 +49,7 @@ export function BattleButton() {
                 },
                 {
                     name: "Time Beta",
+                    teamName: "teamBeta",
                     slots: [
                         ...teamBeta.map((id) => ({ pokemonId: id, moves: [] })),
                         ...Array(6 - teamBeta.length).fill({ pokemonId: null, moves: [] })
@@ -53,6 +57,7 @@ export function BattleButton() {
                 },
                 {
                     name: "Time Gamma",
+                    teamName: "teamGamma",
                     slots: [
                         ...teamGamma.map((id) => ({ pokemonId: id, moves: [] })),
                         ...Array(6 - teamGamma.length).fill({ pokemonId: null, moves: [] })
@@ -61,6 +66,14 @@ export function BattleButton() {
             ]);
         }
     }, [pokemonList]);
+
+  const handleConfirmBattle = async () => {
+    if (selectedIdx === null) return;
+    const team = teams[selectedIdx];
+    const { id } = await createBattle.mutateAsync({ teamName: team.teamName });
+    setOpen(false);
+    router.push(`/battle/${id}`);
+  };
 
   const handleClick = () => {
 
@@ -207,19 +220,14 @@ export function BattleButton() {
             >
               Mudar time
             </Link>
-            <Link
-              href={selectedIdx !== null ? "/battle/teste" : "#"}
-              onClick={() => {
-                if (selectedIdx !== null) {
-                  localStorage.setItem("battle-selected-team", String(selectedIdx));
-                  setOpen(false);
-                }
-              }}
-              className={`bg-primary hover:bg-primary/90 glow-red ${selectedIdx === null ? "opacity-50 cursor-not-allowed" : ""}`}
+            <Button
+              onClick={handleConfirmBattle}
+              disabled={selectedIdx === null || createBattle.isPending}
+              className="bg-primary hover:bg-primary/90 glow-red"
             >
               <Swords className="w-4 h-4 mr-2" />
-              Ir pra batalha
-            </Link>
+              {createBattle.isPending ? "Criando batalha..." : "Ir pra batalha"}
+            </Button>
 
           </DialogFooter>
         </DialogContent>

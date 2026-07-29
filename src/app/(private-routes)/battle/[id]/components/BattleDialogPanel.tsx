@@ -1,11 +1,12 @@
 import { ChevronRight } from "lucide-react";
 import { MenuView } from "./types";
+import { IBattlePokemonMove } from "@/types/IBattle";
 
 interface BattleDialogPanelProps {
   menuView: MenuView;
   dialogText: string;
   activePokemonName: string;
-  moves: string[];
+  moves: IBattlePokemonMove[];
   selectedMoveIdx: number | null;
   onSelectMove: (idx: number) => void;
 }
@@ -27,11 +28,12 @@ export function BattleDialogPanel({
       ) : (
         <div className="grid grid-cols-2 gap-x-8 gap-y-3 w-full">
           {moves.map((m, i) => {
-            const disabled = m === "—";
+            const isStatusMove = m.move.power === null;
+            const disabled = m.currentPp <= 0 || isStatusMove;
             const selected = selectedMoveIdx === i;
             return (
               <button
-                key={i}
+                key={m.id}
                 disabled={disabled}
                 onClick={() => onSelectMove(i)}
                 className={`flex items-center gap-2 font-display text-white text-base md:text-lg uppercase tracking-wider text-left ${
@@ -43,7 +45,13 @@ export function BattleDialogPanel({
                     selected ? "opacity-100 text-yellow-300" : "opacity-0"
                   }`}
                 />
-                <span>{m}</span>
+                <span className="flex-1">
+                  {m.move.name}
+                  {isStatusMove && <span className="text-[10px] normal-case ml-1">(em breve)</span>}
+                </span>
+                <span className="text-xs opacity-80 normal-case">
+                  {m.currentPp}/{m.maxPp}
+                </span>
               </button>
             );
           })}

@@ -49,7 +49,7 @@ export const nextAuthOptions: NextAuthOptions = {
 
           return null;
         } catch (err: any) {
-          console.error(err?.response?.data?.message);
+          console.error("Erro::",err?.response?.data?.message);
           // console.log("Login failed err response:", err?.response);
           if (
             err?.response?.data?.message ===

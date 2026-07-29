@@ -1,10 +1,10 @@
 'use client';
 
-import { MyPokemonProvider } from "@/context/MyPokemonContext"
+import { BattleProvider } from "@/context/BattleContext"
 
 export function Providers({ children }: { children: React.ReactNode }) {
-    return <MyPokemonProvider>
+    return <BattleProvider>
         {children}
-    </MyPokemonProvider>
+    </BattleProvider>
 }
 
