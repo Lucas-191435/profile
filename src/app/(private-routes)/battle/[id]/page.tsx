@@ -108,9 +108,12 @@ const Batalha = () => {
 
   const forcedSwitch = myParticipant?.turnState === "WAITING_FORCED_SWITCH";
 
+  // Só abre depois que a fila de eventos do turno terminar de tocar (activeTurnEvent null) —
+  // sem isso, o modal aparecia assim que o backend confirmava a troca forçada, ainda no meio da
+  // animação/diálogo do golpe que derrubou o Pokémon, antes da barra de HP terminar de zerar.
   useEffect(() => {
-    if (forcedSwitch) setModal("pokemon");
-  }, [forcedSwitch]);
+    if (forcedSwitch && !activeTurnEvent) setModal("pokemon");
+  }, [forcedSwitch, activeTurnEvent]);
 
   useEffect(() => {
     setMenuView("main");
@@ -139,7 +142,7 @@ const Batalha = () => {
   // animação de ataque e do texto serem lidos antes de passar pro golpe seguinte.
   useEffect(() => {
     if (!activeTurnEvent) return;
-    const timer = setTimeout(() => advanceTurnEvent(), 1500);
+    const timer = setTimeout(() => advanceTurnEvent(), 2200);
     return () => clearTimeout(timer);
   }, [activeTurnEvent, advanceTurnEvent]);
 

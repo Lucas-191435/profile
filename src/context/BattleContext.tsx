@@ -102,10 +102,9 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   console.log("Vendo id da batalha", params.id)
 
-  const { data: battle, isLoading, refetch } = useBattleSnapshot({ battleId, enabled: false });
+  const { data: battle, isLoading, refetch } = useBattleSnapshot({ battleId });
 
   console.log("Vendo id da battle", battle)
-  const [isParticipant, setIsParticipant] = useState(true);
   const [readyParticipantIds, setReadyParticipantIds] = useState<Set<string>>(new Set());
   // Guardam o turnNumber em que a flag otimista foi setada — comparado ao turno atual do
   // snapshot, isso substitui um efeito de "resetar quando o turno mudar" por estado derivado.
@@ -123,12 +122,18 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const setSnapshot = useCallback(
     (snapshot: IBattle) => {
       queryClient.setQueryData(["battle", battleId], snapshot);
-      setIsParticipant(true);
     },
     [queryClient, battleId],
   );
 
   const currentUserId = session?.user?.id;
+
+  // Derivado do snapshot REST (agora buscado sempre, não só via ack do socket) — cobre o caso
+  // de F5 no meio de um IN_PROGRESS: o snapshot já chega com os times, activeSlot e turnLogs
+  // dos dois participantes, então não depende do "join-battle" do socket ter sucesso pra saber
+  // se o usuário já é participante. Enquanto o snapshot ainda não chegou, mantém true (estado
+  // "indeterminado") pra não piscar a tela de convite antes da hora.
+  const isParticipant = !battle || !currentUserId || battle.participants.some((p) => p.userId === currentUserId);
 
   const myParticipant = useMemo(
     () => battle?.participants.find((p) => p.userId === currentUserId) ?? null,
@@ -155,24 +160,43 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (turnEventQueue.length > 0) setTurnEventQueue([]);
   }
 
+  // Chave da última sala que este socket (socket.id muda a cada reconexão) confirmou ter
+  // entrado com sucesso — usada pela rede de segurança abaixo pra saber se precisa reemitir
+  // "join-battle" ou não.
+  const joinedRoomKeyRef = useRef<string | null>(null);
+
   const joinRoom = useCallback(async () => {
     if (!battleId || !socket.connected) return;
     try {
       const snapshot = await emitWithAck<IBattle>(socket, "join-battle", { battleId });
       setSnapshot(snapshot);
+      joinedRoomKeyRef.current = `${socket.id}:${battleId}`;
     } catch {
-      // Usuário ainda não é participante desta batalha — tela de convite decide o que mostrar.
-      setIsParticipant(false);
+      // Sem-ops aqui: `isParticipant` é derivado do snapshot REST, não dessa falha de ack.
+      // A rede de segurança abaixo detecta que `joinedRoomKeyRef` continua sem bater e tenta
+      // de novo — não precisa travar nem redirecionar o usuário por causa disso.
     }
   }, [battleId, socket, setSnapshot]);
 
-  // No connect inicial e em toda reconexão, reentra na sala e repopula o estado do zero.
+  // No connect inicial e em toda reconexão, reentra na sala e repopula o estado do zero — mas
+  // só se o usuário JÁ for um participante confirmado desta batalha (checa `battleRef.current`,
+  // não `battle` direto, pra não precisar listar `battle` nas deps e arriscar perder o evento
+  // "connect" por causa de closures desatualizadas). "join-battle" é uma ação deG "reentrar numa
+  // batalha que eu já estou", não de "entrar pela primeira vez" — quem abre um link de convite
+  // ainda não tem `BattleParticipant` no banco, então emitir isso pra ele é rejeitado pelo
+  // backend (e pode até derrubar a conexão) e deixa a tela travada em loading pra sempre, sem
+  // nunca chegar na JoinBattleScreen. Só a ação explícita de `joinBattle()` (botão "Entrar") deve
+  // chamar `join-battle` para quem ainda não é participante — depois que o POST REST já criou o
+  // registro dele.
   // Ouve o evento "connect" do próprio socket em vez de depender da transição do state
   // `connected` — um disconnect+reconnect rápido demais pode ser batchado pelo React numa
   // transição invisível (false→true no mesmo tick não muda o valor final), o que faria esse
   // efeito nunca reexecutar e a nova conexão nunca receber seu join-battle.
   useEffect(() => {
     const handleConnect = () => {
+      const knownBattle = battleRef.current;
+      if (!knownBattle || !currentUserId) return;
+      if (!knownBattle.participants.some((p) => p.userId === currentUserId)) return;
       void joinRoom();
     };
     if (socket.connected) handleConnect();
@@ -180,7 +204,39 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => {
       socket.off("connect", handleConnect);
     };
-  }, [socket, joinRoom]);
+  }, [socket, joinRoom, currentUserId]);
+
+  // Rede de segurança: o efeito de "connect" acima pode não ter disparado ainda (ex.: o socket
+  // conectou antes do snapshot REST confirmar a participação) ou pode ter falhado em silêncio
+  // (ack demorou, caiu no meio, etc.), deixando o socket "conectado" na aparência mas sem sala no
+  // servidor — qualquer ação (submit-action) nesse estado é recusada como se o usuário não
+  // tivesse entrado na batalha. Assim que o snapshot REST confirma que o usuário logado é
+  // participante desta batalha, valida se ESTA conexão (`socket.id`) já confirmou entrada nela
+  // e, se não, tenta de novo em loop até conseguir (ou até essas condições mudarem).
+  useEffect(() => {
+    if (!connected || !battle || !currentUserId || !socket.id) return;
+    if (!battle.participants.some((p) => p.userId === currentUserId)) return;
+
+    const roomKey = `${socket.id}:${battleId}`;
+    if (joinedRoomKeyRef.current === roomKey) return;
+
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout>;
+
+    const attempt = async () => {
+      await joinRoom();
+      if (cancelled) return;
+      if (joinedRoomKeyRef.current !== roomKey) {
+        retryTimer = setTimeout(attempt, 3000);
+      }
+    };
+    void attempt();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+    };
+  }, [connected, battle, currentUserId, socket, battleId, joinRoom]);
 
   useEffect(() => {
     const handleBattleUpdated = (event: BattleUpdatedEvent) => {
@@ -242,9 +298,15 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const joinBattle = useCallback(
     async (teamName: TeamName) => {
       await joinBattleMutation.mutateAsync({ battleId, teamName });
+      // Atualiza o snapshot REST primeiro — garante que `battle.participants` já inclui o
+      // usuário mesmo que `joinRoom()` logo abaixo não consiga nada (ex.: socket ainda
+      // reconectando naquele instante). Com o cache atualizado, a rede de segurança do socket
+      // (useEffect acima) detecta a participação confirmada e entra na sala sozinha assim que a
+      // conexão estiver pronta, sem deixar a tela travada esperando por essa chamada específica.
+      await refetch();
       await joinRoom();
     },
-    [joinBattleMutation, battleId, joinRoom],
+    [joinBattleMutation, battleId, refetch, joinRoom],
   );
 
   const selectLead = useCallback(
