@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { IBattlePokemon } from "@/types/IBattle";
-import { backSprite, frontSprite } from "@/utils/sprites";
+import { backSprite, backSpriteAnimated, frontSprite, frontSpriteAnimated } from "@/utils/sprites";
 import { StatusCard } from "./StatusCard";
 
 const FIXED_LEVEL = 50;
@@ -34,7 +34,7 @@ export function BattleScene({ opponentPokemon, myPokemon, attackingSide }: Battl
       {/* Opponent sprite - TOP RIGHT */}
       <div className="absolute top-16 right-8 md:right-24">
         <img
-          src={frontSprite(opponentPokemon.myPokemon.pokemon.pokeId)}
+          src={frontSpriteAnimated(opponentPokemon.myPokemon.pokemon.pokeId)}
           alt={opponentName}
           className={`w-32 h-32 md:w-44 md:h-44 object-contain drop-shadow-lg ${
             opponentPokemon.fainted ? "grayscale opacity-40" : ""
@@ -46,7 +46,7 @@ export function BattleScene({ opponentPokemon, myPokemon, attackingSide }: Battl
       {/* Player sprite - BOTTOM LEFT */}
       <div className="absolute bottom-10 left-8 md:left-24">
         <img
-          src={backSprite(myPokemon.myPokemon.pokemon.pokeId)}
+          src={backSpriteAnimated(myPokemon.myPokemon.pokemon.pokeId)}
           alt={myName}
           className={`w-40 h-40 md:w-56 md:h-56 object-contain drop-shadow-lg ${
             myPokemon.fainted ? "grayscale opacity-40" : ""

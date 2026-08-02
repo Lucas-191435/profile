@@ -19,9 +19,10 @@ export function ActionButton({ onClick, color, icon, children, disabled }: Actio
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`${palette[color]} border-2 rounded-xl px-3 py-2 font-display font-bold tracking-wider flex items-center justify-center gap-2 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-none`}
+      className={`${palette[color]} border-2 rounded-xl px-2 py-2 md:px-3 font-display font-bold tracking-wider flex items-center justify-center gap-1.5 text-center transition-colors text-[11px] sm:text-xs md:text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-none`}
     >
-      {icon} {children}
+      <span className="shrink-0">{icon}</span>
+      <span className="truncate min-w-0">{children}</span>
     </button>
   );
 }

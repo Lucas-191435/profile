@@ -90,6 +90,7 @@ const Batalha = () => {
     opponentParticipant,
     activeTurnEvent,
     advanceTurnEvent,
+    getDisplayHp,
     mySubmitted,
     opponentSubmitted,
     readyParticipantIds,
@@ -225,8 +226,15 @@ const Batalha = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col px-[200px] py-[100px]">
-      <BattleScene opponentPokemon={opponentActive} myPokemon={myActive} attackingSide={attackingSide} />
+    <div className="min-h-screen bg-background flex flex-col px-4 py-6 sm:px-8 sm:py-10 md:px-16 md:py-16 lg:px-[100px] lg:py-[60px] xl:px-[200px] xl:py-[100px]">
+      <BattleScene
+        opponentPokemon={{
+          ...opponentActive,
+          currentHp: getDisplayHp(opponentActive.id, opponentActive.currentHp, opponentActive.maxHp),
+        }}
+        myPokemon={{ ...myActive, currentHp: getDisplayHp(myActive.id, myActive.currentHp, myActive.maxHp) }}
+        attackingSide={attackingSide}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 border-t-4 border-[#404058]">
         <BattleDialogPanel

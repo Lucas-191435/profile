@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { api } from "../api";
-import { IBattle, TeamName } from "@/types/IBattle";
+import { BattleStatus, IBattle, TeamName } from "@/types/IBattle";
 import { errorToast } from "@/utils/toasts";
 
 export const useBattleSnapshot = ({ battleId, enabled = true }: { battleId: string; enabled?: boolean }) => {
@@ -38,3 +38,53 @@ export const useJoinBattle = () => {
         },
     });
 };
+
+type UseListBattleParams = {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    enabled?: boolean;
+};
+
+export type BattleRoom = {
+    id: string,
+    status: BattleStatus,
+    createdAt: string,
+    playerA: {
+        id: string,
+        name: string,
+        email: string
+    }
+}
+
+export type ListBattleResponse = {
+    battles: BattleRoom[],
+    count: number,
+    page: number,
+    pageSize: number,
+}
+
+export const useListBattle = (params: UseListBattleParams) => {
+    return useQuery({
+        queryKey: ["list-battle", {
+            page: params.page,
+            pageSize: params.pageSize,
+            search: params.search,
+        }],
+        queryFn: async (): Promise<ListBattleResponse> => {
+            const queryString = new URLSearchParams({
+                page: params.page?.toString() || "1",
+                pageSize: params.pageSize?.toString() || "10",
+                search: params.search || "",
+            });
+            const response: { data: ListBattleResponse } = await api.get(`/battle/rooms?${queryString.toString()}`).request;
+            return response.data;
+        },
+        staleTime: 0,
+        enabled: params.enabled ?? true,
+        refetchInterval: 30000,
+        refetchOnMount: true,
+        refetchOnWindowFocus: false
+    });
+};
+

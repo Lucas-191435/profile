@@ -76,6 +76,10 @@ interface BattleContextType {
   // consumida item a item para tocar a animação/diálogo de cada ataque em sequência.
   activeTurnEvent: TurnLogEntry | null;
   advanceTurnEvent: () => void;
+  // HP "exibido" ainda soma o dano dos eventos da fila que não terminaram de tocar — o snapshot
+  // já chega com o HP final do turno inteiro, então sem isso a barra pularia pro valor final
+  // assim que o turno resolve, antes mesmo do shake do golpe que causou aquele dano.
+  getDisplayHp: (battlePokemonId: string, actualHp: number, maxHp: number) => number;
   mySubmitted: boolean;
   opponentSubmitted: boolean;
   readyParticipantIds: Set<string>;
@@ -252,11 +256,16 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
 
-    const handleTurnResolved = (event: TurnResolvedEvent) => {
+    const handleTurnResolved = async (event: TurnResolvedEvent) => {
+      // Espera o snapshot com o HP final do turno chegar ANTES de empilhar os eventos na fila:
+      // getDisplayHp soma o dano pendente da fila em cima do `actualHp` do snapshot, então se a
+      // fila fosse preenchida antes do refetch resolver, esse `actualHp` ainda seria o do turno
+      // anterior — a soma estouraria o HP real e a barra saltaria pra cima antes de cair de volta
+      // assim que o refetch chegasse.
+      await refetch();
       // event.log preserva a ordem de execução decidida pelo backend (prioridade do golpe +
       // velocidade) — é a partir dela que a UI sabe quem atacou primeiro para animar em sequência.
       setTurnEventQueue((prev) => [...prev, ...event.log]);
-      void refetch();
     };
 
     const handleForcedSwitchRequired = () => {
@@ -360,6 +369,44 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setTurnEventQueue((prev) => prev.slice(1));
   }, []);
 
+  // Marca quando o dano do evento atualmente em exibição já pode "aparecer" na barra de HP —
+  // fica false de novo assim que o próximo evento vira o topo da fila.
+  const [headDamageRevealed, setHeadDamageRevealed] = useState(false);
+  // Mesmo padrão de "ajuste de estado durante o render" usado acima pro reset de battleId —
+  // evita o efeito extra de só resetar quando activeTurnEvent mudar.
+  const [prevActiveTurnEvent, setPrevActiveTurnEvent] = useState<TurnLogEntry | null>(null);
+  if (activeTurnEvent !== prevActiveTurnEvent) {
+    setPrevActiveTurnEvent(activeTurnEvent);
+    if (headDamageRevealed) setHeadDamageRevealed(false);
+  }
+
+  useEffect(() => {
+    if (!activeTurnEvent || activeTurnEvent.event !== "move" || activeTurnEvent.missed) return;
+    // Só revela o dano depois que a animação de shake (attack-shake, 0.6s x2 = 1.2s) termina.
+    const timer = setTimeout(() => setHeadDamageRevealed(true), 1200);
+    return () => clearTimeout(timer);
+  }, [activeTurnEvent]);
+
+  // Soma quanto dano de cada Pokémon ainda não deve aparecer na barra de HP: todo dano dos
+  // eventos que ainda estão na fila, exceto o do evento no topo depois que seu shake terminar.
+  const pendingDamageByPokemon = useMemo(() => {
+    const map: Record<string, number> = {};
+    turnEventQueue.forEach((entry, idx) => {
+      if (entry.event !== "move" || entry.missed) return;
+      if (idx === 0 && headDamageRevealed) return;
+      map[entry.targetBattlePokemonId] = (map[entry.targetBattlePokemonId] ?? 0) + entry.damage;
+    });
+    return map;
+  }, [turnEventQueue, headDamageRevealed]);
+
+  const getDisplayHp = useCallback(
+    (battlePokemonId: string, actualHp: number, maxHp: number) => {
+      const pending = pendingDamageByPokemon[battlePokemonId] ?? 0;
+      return Math.min(maxHp, actualHp + pending);
+    },
+    [pendingDamageByPokemon],
+  );
+
   const submitMove = useCallback((moveId: string) => submitAction({ type: "MOVE", moveId }), [submitAction]);
   const submitSwitch = useCallback(
     (targetPokemonId: string) => submitAction({ type: "SWITCH", targetPokemonId }),
@@ -383,6 +430,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         lastLog,
         activeTurnEvent,
         advanceTurnEvent,
+        getDisplayHp,
         mySubmitted,
         opponentSubmitted,
         readyParticipantIds,

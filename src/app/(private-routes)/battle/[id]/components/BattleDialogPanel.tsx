@@ -1,4 +1,3 @@
-import { ChevronRight } from "lucide-react";
 import { MenuView } from "./types";
 import { IBattlePokemonMove } from "@/types/IBattle";
 
@@ -26,7 +25,7 @@ export function BattleDialogPanel({
           {dialogText || `O que ${activePokemonName} deve fazer?`}
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-x-8 gap-y-3 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
           {moves.map((m, i) => {
             const isStatusMove = m.move.power === null;
             const disabled = m.currentPp <= 0 || isStatusMove;
@@ -36,21 +35,22 @@ export function BattleDialogPanel({
                 key={m.id}
                 disabled={disabled}
                 onClick={() => onSelectMove(i)}
-                className={`flex items-center gap-2 font-display text-white text-base md:text-lg uppercase tracking-wider text-left ${
-                  disabled ? "opacity-40 cursor-not-allowed" : "hover:text-yellow-200"
+                className={`flex flex-col gap-0.5 rounded-lg border-2 px-3 py-1.5 font-display uppercase tracking-wider text-left transition-colors ${
+                  selected
+                    ? "border-yellow-300 bg-white/15 text-yellow-200"
+                    : "border-transparent text-white"
+                } ${
+                  disabled
+                    ? "opacity-40 cursor-not-allowed"
+                    : "hover:border-yellow-200/50 hover:bg-white/5"
                 }`}
               >
-                <ChevronRight
-                  className={`w-4 h-4 shrink-0 transition-opacity ${
-                    selected ? "opacity-100 text-yellow-300" : "opacity-0"
-                  }`}
-                />
-                <span className="flex-1">
+                <span className="text-sm md:text-base leading-tight break-words">
                   {m.move.name}
                   {isStatusMove && <span className="text-[10px] normal-case ml-1">(em breve)</span>}
                 </span>
                 <span className="text-xs opacity-80 normal-case">
-                  {m.currentPp}/{m.maxPp}
+                  PP {m.currentPp}/{m.maxPp}
                 </span>
               </button>
             );
