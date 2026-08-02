@@ -225,7 +225,19 @@
     50% { box-shadow: 0 0 40px hsl(0 85% 55% / 0.6), 0 0 100px hsl(0 85% 55% / 0.3); }
   }
 
+  @keyframes attack-shake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-6px, 2px); }
+    40% { transform: translate(6px, -2px); }
+    60% { transform: translate(-5px, 1px); }
+    80% { transform: translate(5px, -1px); }
+  }
+
 .animate-bounce-custom {
   animation: bounce 1s infinite;
+}
+
+.animate-attack-shake {
+  animation: attack-shake 0.6s ease-in-out 2;
 }
 }
