@@ -233,11 +233,58 @@
     80% { transform: translate(5px, -1px); }
   }
 
+  @keyframes status-flash {
+    0%, 100% { box-shadow: 4px 4px 0 rgba(0,0,0,0.35); }
+    50% { box-shadow: 4px 4px 0 rgba(0,0,0,0.35), 0 0 0 4px var(--status-flash-color, #f8d030); }
+  }
+
+  @keyframes cure-flash {
+    0%, 100% { filter: brightness(1) saturate(1); }
+    50% { filter: brightness(1.6) saturate(0.3); }
+  }
+
+  @keyframes float-up-fade {
+    0% { transform: translateY(0); opacity: 0; }
+    15% { opacity: 1; }
+    100% { transform: translateY(-24px); opacity: 0; }
+  }
+
+  @keyframes faint-drop {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(40px) scale(0.85); opacity: 0; }
+  }
+
+  @keyframes sprite-enter {
+    0% { transform: scale(0.2); opacity: 0; }
+    70% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
 .animate-bounce-custom {
   animation: bounce 1s infinite;
 }
 
 .animate-attack-shake {
   animation: attack-shake 0.6s ease-in-out 2;
+}
+
+.animate-status-flash {
+  animation: status-flash 0.5s ease-in-out 2;
+}
+
+.animate-cure-flash {
+  animation: cure-flash 0.6s ease-in-out;
+}
+
+.animate-float-up-fade {
+  animation: float-up-fade 1.6s ease-out forwards;
+}
+
+.animate-faint-drop {
+  animation: faint-drop 0.6s ease-in forwards;
+}
+
+.animate-sprite-enter {
+  animation: sprite-enter 0.5s ease-out;
 }
 }

@@ -41,6 +41,23 @@ function isSocketErrorResponse(response: unknown): boolean {
   return !("id" in anyRes) && !("received" in anyRes);
 }
 
+// Extrai o efeito de HP (se houver) de um evento de log — unifica dano (positivo) e cura
+// (negativo, pra manter a barra "baixa" até a animação de heal revelar o valor real).
+function getHpEffect(entry: TurnLogEntry): { battlePokemonId: string; delta: number } | null {
+  switch (entry.event) {
+    case "move":
+      return entry.missed ? null : { battlePokemonId: entry.targetBattlePokemonId, delta: entry.damage };
+    case "confusion-hit":
+    case "status-tick":
+    case "recoil":
+      return { battlePokemonId: entry.battlePokemonId, delta: entry.damage };
+    case "heal":
+      return { battlePokemonId: entry.battlePokemonId, delta: -entry.amount };
+    default:
+      return null;
+  }
+}
+
 function emitWithAck<T>(socket: Socket, event: string, payload: unknown, timeoutMs = 10000): Promise<T> {
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -75,6 +92,9 @@ interface BattleContextType {
   // Fila ordenada dos eventos do turno recém-resolvido (mesma ordem de execução do backend),
   // consumida item a item para tocar a animação/diálogo de cada ataque em sequência.
   activeTurnEvent: TurnLogEntry | null;
+  // Incrementa a cada novo evento no topo da fila — usado como React key pra reiniciar
+  // animações transitórias (flash de status, seta de stat, +HP de heal) a cada ocorrência.
+  activeTurnEventSeq: number;
   advanceTurnEvent: () => void;
   // HP "exibido" ainda soma o dano dos eventos da fila que não terminaram de tocar — o snapshot
   // já chega com o HP final do turno inteiro, então sem isso a barra pularia pro valor final
@@ -108,7 +128,6 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const { data: battle, isLoading, refetch } = useBattleSnapshot({ battleId });
 
-  console.log("Vendo id da battle", battle)
   const [readyParticipantIds, setReadyParticipantIds] = useState<Set<string>>(new Set());
   // Guardam o turnNumber em que a flag otimista foi setada — comparado ao turno atual do
   // snapshot, isso substitui um efeito de "resetar quando o turno mudar" por estado derivado.
@@ -369,32 +388,39 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setTurnEventQueue((prev) => prev.slice(1));
   }, []);
 
-  // Marca quando o dano do evento atualmente em exibição já pode "aparecer" na barra de HP —
+  // Marca quando o efeito de HP do evento atualmente em exibição já pode "aparecer" na barra —
   // fica false de novo assim que o próximo evento vira o topo da fila.
   const [headDamageRevealed, setHeadDamageRevealed] = useState(false);
+  // eventSeq muda a cada evento novo no topo da fila — usado pelo front pra forçar reinício das
+  // animações transitórias (flash de status, seta de stat, +HP de heal) mesmo quando o mesmo tipo
+  // de evento se repete em sequência.
+  const [eventSeq, setEventSeq] = useState(0);
   // Mesmo padrão de "ajuste de estado durante o render" usado acima pro reset de battleId —
   // evita o efeito extra de só resetar quando activeTurnEvent mudar.
   const [prevActiveTurnEvent, setPrevActiveTurnEvent] = useState<TurnLogEntry | null>(null);
   if (activeTurnEvent !== prevActiveTurnEvent) {
     setPrevActiveTurnEvent(activeTurnEvent);
     if (headDamageRevealed) setHeadDamageRevealed(false);
+    setEventSeq((s) => s + 1);
   }
 
   useEffect(() => {
-    if (!activeTurnEvent || activeTurnEvent.event !== "move" || activeTurnEvent.missed) return;
-    // Só revela o dano depois que a animação de shake (attack-shake, 0.6s x2 = 1.2s) termina.
+    if (!activeTurnEvent || !getHpEffect(activeTurnEvent)) return;
+    // Só revela o efeito depois que a animação de shake (attack-shake, 0.6s x2 = 1.2s) termina.
     const timer = setTimeout(() => setHeadDamageRevealed(true), 1200);
     return () => clearTimeout(timer);
   }, [activeTurnEvent]);
 
-  // Soma quanto dano de cada Pokémon ainda não deve aparecer na barra de HP: todo dano dos
-  // eventos que ainda estão na fila, exceto o do evento no topo depois que seu shake terminar.
+  // Soma quanto o HP de cada Pokémon ainda não deve refletir na barra: o delta (dano positivo ou
+  // cura negativa) de todos os eventos que ainda estão na fila, exceto o do topo depois que sua
+  // animação já tiver terminado.
   const pendingDamageByPokemon = useMemo(() => {
     const map: Record<string, number> = {};
     turnEventQueue.forEach((entry, idx) => {
-      if (entry.event !== "move" || entry.missed) return;
+      const effect = getHpEffect(entry);
+      if (!effect) return;
       if (idx === 0 && headDamageRevealed) return;
-      map[entry.targetBattlePokemonId] = (map[entry.targetBattlePokemonId] ?? 0) + entry.damage;
+      map[effect.battlePokemonId] = (map[effect.battlePokemonId] ?? 0) + effect.delta;
     });
     return map;
   }, [turnEventQueue, headDamageRevealed]);
@@ -402,7 +428,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const getDisplayHp = useCallback(
     (battlePokemonId: string, actualHp: number, maxHp: number) => {
       const pending = pendingDamageByPokemon[battlePokemonId] ?? 0;
-      return Math.min(maxHp, actualHp + pending);
+      return Math.max(0, Math.min(maxHp, actualHp + pending));
     },
     [pendingDamageByPokemon],
   );
@@ -429,6 +455,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         opponentParticipant,
         lastLog,
         activeTurnEvent,
+        activeTurnEventSeq: eventSeq,
         advanceTurnEvent,
         getDisplayHp,
         mySubmitted,

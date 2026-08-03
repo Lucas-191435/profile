@@ -1,4 +1,4 @@
-import { useLeavePokemon, useMyPokemon, useUpdatePokemonTeam } from "@/services/queries/useMyPokemon";
+import { useMyPokemon, useUpdatePokemonTeam } from "@/services/queries/useMyPokemon";
 import { IMyPokemon, Team } from "@/types/IMyPokemon";
 import { useContext, createContext, useState } from "react";
 

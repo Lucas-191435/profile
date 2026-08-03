@@ -6,6 +6,8 @@ export type BattleActionType = "MOVE" | "SWITCH" | "ITEM" | "FORFEIT";
 export type BattleEffectiveness = "no_effect" | "not_very_effective" | "effective" | "super_effective";
 export type TeamName = "teamAlpha" | "teamBeta" | "teamGamma";
 export type StatusCondition = "NONE" | "PARALYZED" | "POISONED" | "BURNED" | "ASLEEP" | "FROZEN" | "CONFUSED";
+export type StatusBlockedReason = "asleep" | "paralyzed" | "frozen" | "confused-hit";
+export type StatKey = "atk" | "def" | "spAtk" | "spDef" | "speed" | "accuracy" | "evasion";
 
 export interface IBattlePokemonMove {
   id: string;
@@ -77,6 +79,27 @@ export type TurnLogEntry =
       critical: boolean;
       targetFainted: boolean;
     }
+  | { event: "status-applied"; participantId: string; battlePokemonId: string; statusCondition: StatusCondition }
+  | {
+      event: "status-blocked";
+      participantId: string;
+      battlePokemonId: string;
+      statusCondition: StatusCondition;
+      reason: StatusBlockedReason;
+    }
+  | { event: "confusion-hit"; participantId: string; battlePokemonId: string; damage: number; targetFainted: boolean }
+  | {
+      event: "status-tick";
+      participantId: string;
+      battlePokemonId: string;
+      statusCondition: StatusCondition;
+      damage: number;
+      targetFainted: boolean;
+    }
+  | { event: "status-cured"; participantId: string; battlePokemonId: string; statusCondition: StatusCondition }
+  | { event: "stat-change"; participantId: string; battlePokemonId: string; stat: StatKey; stages: number; newStage: number }
+  | { event: "heal"; participantId: string; battlePokemonId: string; amount: number }
+  | { event: "recoil"; participantId: string; battlePokemonId: string; damage: number; targetFainted: boolean }
   | { event: "battle-ended"; winnerParticipantId: string | null; reason: "faint" | "forfeit" };
 
 export interface IBattleTurnLog {
