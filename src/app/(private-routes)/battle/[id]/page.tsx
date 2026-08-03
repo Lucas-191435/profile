@@ -16,6 +16,7 @@ import { PokemonModal } from "./components/PokemonModal";
 import { BagModal } from "./components/BagModal";
 import { ChatModal } from "./components/ChatModal";
 import { MenuView, ModalView } from "./components/types";
+import { sounds } from "@/utils/sounds";
 
 const TEAM_LABELS: Record<string, string> = {
   teamAlpha: "Alpha",
@@ -250,11 +251,15 @@ const Batalha = () => {
           moves={myActive.moves}
           selectedMoveIdx={selectedMoveIdx}
           locked={locked}
-          onOpenAttacks={() => setMenuView("attacks")}
+          onOpenAttacks={() =>{ 
+             sounds.clickMouse.play();
+            setMenuView("attacks")}}
           onOpenBag={() => setModal("bag")}
-          onOpenPokemon={() => setModal("pokemon")}
+          onOpenPokemon={() => { 
+             sounds.clickMouse.play();setModal("pokemon")}}
           onOpenChat={() => setModal("chat")}
           onBackToMain={() => {
+            sounds.clickPastic.play();
             setMenuView("main");
             setSelectedMoveIdx(null);
           }}
