@@ -47,17 +47,11 @@ const useAuth = () => {
       const role = sessionData.user.role;
 
       // Define rotas permitidas para cada tipo de usuário
-      const isInValidRoute =
-        (role === "CONSULTANT" &&
-          (pathname.startsWith("/consultant") ||
-            pathname.startsWith("/client"))) ||
-        (role === "CLIENT" && pathname.startsWith("/client"));
+      const isInValidRoute = (role === "CLIENT" && pathname.startsWith("/client"));
 
       // Redireciona apenas se não estiver em uma rota válida
       if (!isInValidRoute) {
-        if (role === "CONSULTANT") {
-          replace(PrivateRoutes.consultant.clients);
-        } else if (role === "CLIENT") {
+        if (role === "CLIENT") {
           replace(PrivateRoutes.client.dashboard);
         }
       }
