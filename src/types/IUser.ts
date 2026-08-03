@@ -1,8 +1,5 @@
 export enum Role {
   Client = "CLIENT",
-  Consultant = "CONSULTANT", // CONSULTANT = COACH
-  MasterCoach = "MASTER_COACH",
-  Franchise = "FRANCHISE",
   Admin = "ADMIN",
 }
 
@@ -13,3 +10,23 @@ export type IUser = {
   role: Role;
   token: string;
 };
+
+
+export type IUserStats = {
+    wins: number;
+    losses: number;
+    pokemonLength: number;
+    winRate: number;
+}
+
+export type IUserProps = {
+    id: string;
+    email: string;
+    role: Role;
+    name: string;
+    avatar: string | null;
+    description: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    stats: IUserStats;
+}

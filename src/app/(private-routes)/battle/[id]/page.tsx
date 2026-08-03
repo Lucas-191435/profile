@@ -3,19 +3,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useBattleContext } from "@/context/BattleContext";
-import { IBattle, TurnLogEntry } from "@/types/IBattle";
+import { IBattle, IBattleParticipant, StatKey, StatusBlockedReason, StatusCondition, TurnLogEntry } from "@/types/IBattle";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { PokemonSelectScreen } from "./components/PokemonSelectScreen";
 import { WaitingOpponentScreen } from "./components/WaitingOpponentScreen";
 import { JoinBattleScreen } from "./components/JoinBattleScreen";
 import { BattleResultScreen } from "./components/BattleResultScreen";
 import { BattleScene } from "./components/BattleScene";
+import { StatusCardEffect } from "./components/StatusCard";
 import { BattleDialogPanel } from "./components/BattleDialogPanel";
 import { BattleActionsPanel } from "./components/BattleActionsPanel";
 import { PokemonModal } from "./components/PokemonModal";
 import { BagModal } from "./components/BagModal";
 import { ChatModal } from "./components/ChatModal";
 import { MenuView, ModalView } from "./components/types";
+import { sounds } from "@/utils/sounds";
 
 const TEAM_LABELS: Record<string, string> = {
   teamAlpha: "Alpha",
@@ -47,6 +49,50 @@ function moveNameById(battle: IBattle, moveId: string): string {
   return "um golpe";
 }
 
+const STATUS_APPLIED_TEXT: Record<Exclude<StatusCondition, "NONE">, string> = {
+  PARALYZED: "foi paralisado",
+  POISONED: "foi envenenado",
+  BURNED: "foi queimado",
+  ASLEEP: "adormeceu",
+  FROZEN: "foi congelado",
+  CONFUSED: "ficou confuso",
+};
+
+const STATUS_TICK_TEXT: Record<Exclude<StatusCondition, "NONE">, string> = {
+  PARALYZED: "sofreu com a paralisia",
+  POISONED: "sofreu com o veneno",
+  BURNED: "sofreu com a queimadura",
+  ASLEEP: "continua dormindo",
+  FROZEN: "está congelado",
+  CONFUSED: "está confuso",
+};
+
+const STATUS_CURED_TEXT: Record<Exclude<StatusCondition, "NONE">, string> = {
+  PARALYZED: "não está mais paralisado",
+  POISONED: "não está mais envenenado",
+  BURNED: "não está mais queimado",
+  ASLEEP: "acordou",
+  FROZEN: "descongelou",
+  CONFUSED: "não está mais confuso",
+};
+
+const STATUS_BLOCKED_TEXT: Record<StatusBlockedReason, string> = {
+  asleep: "está dormindo e não conseguiu se mexer",
+  paralyzed: "está paralisado e não conseguiu se mexer",
+  frozen: "está congelado e não conseguiu se mexer",
+  "confused-hit": "está confuso e não conseguiu se concentrar",
+};
+
+const STAT_LABELS: Record<StatKey, string> = {
+  atk: "Ataque",
+  def: "Defesa",
+  spAtk: "Ataque Especial",
+  spDef: "Defesa Especial",
+  speed: "Velocidade",
+  accuracy: "Precisão",
+  evasion: "Evasão",
+};
+
 function describeTurnLog(entry: TurnLogEntry, battle: IBattle, currentUserId?: string): string {
   switch (entry.event) {
     case "switch":
@@ -74,9 +120,106 @@ function describeTurnLog(entry: TurnLogEntry, battle: IBattle, currentUserId?: s
       const faintText = entry.targetFainted ? ` ${target} desmaiou!` : "";
       return `${attacker} usou ${move}!${critText}${effectivenessText}${faintText}`;
     }
+    case "status-applied": {
+      const pokeName = pokemonNameById(battle, entry.battlePokemonId);
+      return `${pokeName} ${STATUS_APPLIED_TEXT[entry.statusCondition as Exclude<typeof entry.statusCondition, "NONE">]}!`;
+    }
+    case "status-blocked": {
+      const pokeName = pokemonNameById(battle, entry.battlePokemonId);
+      return `${pokeName} ${STATUS_BLOCKED_TEXT[entry.reason]}!`;
+    }
+    case "confusion-hit": {
+      const pokeName = pokemonNameById(battle, entry.battlePokemonId);
+      const faintText = entry.targetFainted ? ` ${pokeName} desmaiou!` : "";
+      return `${pokeName} se feriu na confusão!${faintText}`;
+    }
+    case "status-tick": {
+      const pokeName = pokemonNameById(battle, entry.battlePokemonId);
+      const faintText = entry.targetFainted ? ` ${pokeName} desmaiou!` : "";
+      return `${pokeName} ${STATUS_TICK_TEXT[entry.statusCondition as Exclude<typeof entry.statusCondition, "NONE">]}!${faintText}`;
+    }
+    case "status-cured": {
+      const pokeName = pokemonNameById(battle, entry.battlePokemonId);
+      return `${pokeName} ${STATUS_CURED_TEXT[entry.statusCondition as Exclude<typeof entry.statusCondition, "NONE">]}!`;
+    }
+    case "stat-change": {
+      const pokeName = pokemonNameById(battle, entry.battlePokemonId);
+      const dir = entry.stages > 0 ? "aumentou" : "diminuiu";
+      const intensity = Math.abs(entry.stages) >= 2 ? " bastante" : "";
+      return `${STAT_LABELS[entry.stat]} de ${pokeName} ${dir}${intensity}!`;
+    }
+    case "heal": {
+      const pokeName = pokemonNameById(battle, entry.battlePokemonId);
+      return `${pokeName} recuperou HP!`;
+    }
+    case "recoil": {
+      const pokeName = pokemonNameById(battle, entry.battlePokemonId);
+      const faintText = entry.targetFainted ? ` ${pokeName} desmaiou!` : "";
+      return `${pokeName} sofreu dano de recuo!${faintText}`;
+    }
     case "battle-ended":
       return entry.reason === "forfeit" ? "A batalha terminou por desistência." : "A batalha chegou ao fim!";
   }
+}
+
+function sideForBattlePokemon(
+  battlePokemonId: string,
+  myParticipant: IBattleParticipant | null,
+  opponentParticipant: IBattleParticipant | null,
+): "me" | "opponent" | null {
+  if (myParticipant?.pokemons.some((p) => p.id === battlePokemonId)) return "me";
+  if (opponentParticipant?.pokemons.some((p) => p.id === battlePokemonId)) return "opponent";
+  return null;
+}
+
+function faintedBattlePokemonId(entry: TurnLogEntry): string | null {
+  switch (entry.event) {
+    case "move":
+      return entry.targetFainted ? entry.targetBattlePokemonId : null;
+    case "confusion-hit":
+    case "status-tick":
+    case "recoil":
+      return entry.targetFainted ? entry.battlePokemonId : null;
+    default:
+      return null;
+  }
+}
+
+function sideEffectsForEvent(
+  entry: TurnLogEntry | null,
+  myParticipant: IBattleParticipant | null,
+  opponentParticipant: IBattleParticipant | null,
+): { me: StatusCardEffect | null; opponent: StatusCardEffect | null } {
+  if (!entry) return { me: null, opponent: null };
+
+  let battlePokemonId: string | null = null;
+  let effect: StatusCardEffect | null = null;
+
+  switch (entry.event) {
+    case "status-applied":
+      battlePokemonId = entry.battlePokemonId;
+      effect = { kind: "status", status: entry.statusCondition, variant: "applied" };
+      break;
+    case "status-cured":
+      battlePokemonId = entry.battlePokemonId;
+      effect = { kind: "status", status: entry.statusCondition, variant: "cured" };
+      break;
+    case "stat-change":
+      battlePokemonId = entry.battlePokemonId;
+      effect = { kind: "stat", stat: entry.stat, stages: entry.stages };
+      break;
+    case "heal":
+      battlePokemonId = entry.battlePokemonId;
+      effect = { kind: "heal", amount: entry.amount };
+      break;
+    default:
+      return { me: null, opponent: null };
+  }
+
+  const side = sideForBattlePokemon(battlePokemonId, myParticipant, opponentParticipant);
+  if (side === "me") return { me: effect, opponent: null };
+  if (side === "opponent") return { me: null, opponent: effect };
+  return { me: null, opponent: null };
 }
 
 const Batalha = () => {
@@ -89,6 +232,7 @@ const Batalha = () => {
     myParticipant,
     opponentParticipant,
     activeTurnEvent,
+    activeTurnEventSeq,
     advanceTurnEvent,
     getDisplayHp,
     mySubmitted,
@@ -147,10 +291,33 @@ const Batalha = () => {
     return () => clearTimeout(timer);
   }, [activeTurnEvent, advanceTurnEvent]);
 
-  const attackingSide = useMemo<"me" | "opponent" | null>(() => {
-    if (!activeTurnEvent || activeTurnEvent.event !== "move" || !myParticipant) return null;
+  // Lado que deve "reagir" fisicamente ao evento em exibição: quem ataca (move) ou quem sofre
+  // dano de confusão/status/recuo (self-inflicted, mesmo participantId de quem sofre o efeito).
+  const shakingSide = useMemo<"me" | "opponent" | null>(() => {
+    if (!activeTurnEvent || !myParticipant) return null;
+    const isShakeEvent =
+      activeTurnEvent.event === "move" ||
+      activeTurnEvent.event === "confusion-hit" ||
+      activeTurnEvent.event === "status-tick" ||
+      activeTurnEvent.event === "recoil";
+    if (!isShakeEvent) return null;
+    if (activeTurnEvent.event === "move" && activeTurnEvent.missed) return null;
     return activeTurnEvent.participantId === myParticipant.id ? "me" : "opponent";
   }, [activeTurnEvent, myParticipant]);
+
+  // Lado cujo Pokémon desmaiou NESTE evento (dispara a animação de queda uma única vez, no
+  // instante em que o evento causador do faint está no topo da fila).
+  const faintSide = useMemo<"me" | "opponent" | null>(() => {
+    if (!activeTurnEvent) return null;
+    const battlePokemonId = faintedBattlePokemonId(activeTurnEvent);
+    if (!battlePokemonId) return null;
+    return sideForBattlePokemon(battlePokemonId, myParticipant, opponentParticipant);
+  }, [activeTurnEvent, myParticipant, opponentParticipant]);
+
+  const { me: myEffect, opponent: opponentEffect } = useMemo(
+    () => sideEffectsForEvent(activeTurnEvent, myParticipant, opponentParticipant),
+    [activeTurnEvent, myParticipant, opponentParticipant],
+  );
 
   if (!isConnected || (isParticipant && !battle)) {
     return <LoadingScreen />;
@@ -207,6 +374,7 @@ const Batalha = () => {
     const move = myActive.moves[selectedMoveIdx];
     if (!move) return;
     try {
+      sounds.clickMouse.play()
       await submitMove(move.moveId);
       setMenuView("main");
       setSelectedMoveIdx(null);
@@ -233,7 +401,11 @@ const Batalha = () => {
           currentHp: getDisplayHp(opponentActive.id, opponentActive.currentHp, opponentActive.maxHp),
         }}
         myPokemon={{ ...myActive, currentHp: getDisplayHp(myActive.id, myActive.currentHp, myActive.maxHp) }}
-        attackingSide={attackingSide}
+        shakingSide={shakingSide}
+        faintSide={faintSide}
+        myEffect={myEffect}
+        opponentEffect={opponentEffect}
+        effectKey={activeTurnEventSeq}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 border-t-4 border-[#404058]">
@@ -250,11 +422,15 @@ const Batalha = () => {
           moves={myActive.moves}
           selectedMoveIdx={selectedMoveIdx}
           locked={locked}
-          onOpenAttacks={() => setMenuView("attacks")}
+          onOpenAttacks={() =>{ 
+             sounds.clickMouse.play();
+            setMenuView("attacks")}}
           onOpenBag={() => setModal("bag")}
-          onOpenPokemon={() => setModal("pokemon")}
+          onOpenPokemon={() => { 
+             sounds.clickMouse.play();setModal("pokemon")}}
           onOpenChat={() => setModal("chat")}
           onBackToMain={() => {
+            sounds.clickPastic.play();
             setMenuView("main");
             setSelectedMoveIdx(null);
           }}

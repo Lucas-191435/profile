@@ -8,6 +8,16 @@ export const sounds = {
     volume: 0.5
   }),
 
+  clickMouse: new Howl({
+    src: ["/sounds/click-sound.mp3"],
+    volume: 0.5
+  }),
+
+  clickPastic: new Howl({
+    src: ["/sounds/click-pastic.mp3"],
+    volume: 0.5
+  }),
+
   clickSideBar: new Howl({
     src: ["/sounds/sidebar-click.mp3"],
     volume: 0.5

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 import ContainerSidebar from "@/components/shared/ContainerSidebar";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,27 +15,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trophy, Skull, Sparkles, Pencil, Check, UserCircle2, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useMyPokemon } from "@/services/queries/useMyPokemon";
+import { useUser, useUpdateUser } from "@/services/queries/useUser";
+import { useAuth } from "@/hooks/useAuth";
 import { TRAINERS } from "@/utils/trainers";
 
 
 
-
-
-interface Profile {
-  name: string;
-  description: string;
-  wins: number;
-  losses: number;
-  avatarId: string;
-}
-
-const DEFAULT_PROFILE: Profile = {
-  name: "Treinador",
-  description: "Em busca de me tornar o melhor treinador Pokémon.",
-  wins: 0,
-  losses: 0,
-  avatarId: "red",
-};
 
 interface TeamSlot { pokemonId: string; moves: string[] }
 interface Team { name: string; slots: TeamSlot[] }
@@ -52,45 +37,43 @@ const typeColors: Record<string, string> = {
 };
 
 const ClientHomePage = () => {
-  const { data: pokemonList, isLoading, error } = useMyPokemon({ enabled: true });
-  const [profile, setProfile] = useState<Profile>(() => {
-    const saved = localStorage.getItem("trainer-profile");
-    return saved ? { ...DEFAULT_PROFILE, ...JSON.parse(saved) } : DEFAULT_PROFILE;
-  })
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<Profile>(profile);
-  const [avatarOpen, setAvatarOpen] = useState(false);
+  const { data: pokemonList } = useMyPokemon({ enabled: true });
+  const { data: authUser } = useAuth();
+  const userId = authUser?.id ?? "";
+  const { data: user } = useUser({ userId, enabled: !!userId });
+  const updateUserMutation = useUpdateUser(userId);
 
-  const collection: number[] = useMemo(() => {
-    const saved = localStorage.getItem("pokemon-collection");
-    return saved ? JSON.parse(saved) : [];
-  }, [profile]);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState({ name: "", description: "" });
+  const [avatarOpen, setAvatarOpen] = useState(false);
 
   const [teams, setTeams] = useState<Team[]>([]);
 
-  useEffect(() => {
-    localStorage.setItem("trainer-profile", JSON.stringify(profile));
-  }, [profile]);
+  const avatarId = user?.avatar || TRAINERS[0].id;
+  const trainer = TRAINERS.find((t) => t.id === avatarId) ?? TRAINERS[0];
+  const stats = user?.stats;
+  const winRate = stats ? Math.round(stats.winRate * 100) : 0;
 
-  const trainer = TRAINERS.find((t) => t.id === profile.avatarId) ?? TRAINERS[0];
-  const totalBattles = profile.wins + profile.losses;
-  const winRate = totalBattles > 0 ? Math.round((profile.wins / totalBattles) * 100) : 0;
+  const startEdit = () => {
+    setDraft({ name: user?.name ?? "", description: user?.description ?? "" });
+    setEditing(true);
+  };
 
-  const startEdit = () => { setDraft(profile); setEditing(true); };
   const saveEdit = () => {
-    setProfile({
-      ...draft,
+    updateUserMutation.mutate({
       name: draft.name.trim().slice(0, 50) || "Treinador",
       description: draft.description.trim().slice(0, 240),
-      wins: Math.max(0, Math.floor(Number(draft.wins) || 0)),
-      losses: Math.max(0, Math.floor(Number(draft.losses) || 0)),
+      avatar: avatarId,
     });
     setEditing(false);
-    // toast({ title: "Perfil atualizado", description: "Suas informações foram salvas." });
   };
 
   const pickAvatar = (id: string) => {
-    setProfile((p) => ({ ...p, avatarId: id }));
+    updateUserMutation.mutate({
+      name: user?.name ?? "",
+      description: user?.description ?? "",
+      avatar: id,
+    });
     setAvatarOpen(false);
   };
 
@@ -136,7 +119,7 @@ const ClientHomePage = () => {
 
         {/* Identity card */}
         <Card className="border-primary/30 bg-card/80 overflow-hidden relative">
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-r from-primary/30 via-primary/10 to-transparent" />
+          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-r from-primary/30 via-primary/10 to-transparent pointer-events-none" />
           <CardContent className="">
             <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
               <button
@@ -173,9 +156,9 @@ const ClientHomePage = () => {
                   </div>
                 ) : (
                   <>
-                    <h2 className="font-display text-2xl font-bold tracking-wide">{profile.name}</h2>
+                    <h2 className="font-display text-2xl font-bold tracking-wide">{user?.name || "Treinador"}</h2>
                     <p className="font-body text-sm text-muted-foreground whitespace-pre-wrap">
-                      {profile.description || "Sem descrição."}
+                      {user?.description || "Sem descrição."}
                     </p>
                   </>
                 )}
@@ -206,7 +189,7 @@ const ClientHomePage = () => {
               <Trophy className="w-8 h-8 text-yellow-500" />
               <div className="flex-1">
                 <p className="text-[10px] uppercase font-display text-muted-foreground tracking-wider">Vitórias</p>
-                  <p className="font-display text-2xl font-bold">{profile.wins}</p>
+                  <p className="font-display text-2xl font-bold">{stats?.wins ?? 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -216,7 +199,7 @@ const ClientHomePage = () => {
               <Skull className="w-8 h-8 text-destructive" />
               <div className="flex-1">
                 <p className="text-[10px] uppercase font-display text-muted-foreground tracking-wider">Derrotas</p>
-                  <p className="font-display text-2xl font-bold">{profile.losses}</p>
+                  <p className="font-display text-2xl font-bold">{stats?.losses ?? 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -226,7 +209,7 @@ const ClientHomePage = () => {
               <Sparkles className="w-8 h-8 text-primary" />
               <div>
                 <p className="text-[10px] uppercase font-display text-muted-foreground tracking-wider">Pokémon</p>
-                <p className="font-display text-2xl font-bold">{pokemonList?.length || 0}</p>
+                <p className="font-display text-2xl font-bold">{stats?.pokemonLength ?? pokemonList?.length ?? 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -303,7 +286,7 @@ const ClientHomePage = () => {
             <ScrollArea className="max-h-[60vh] pr-2">
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                 {TRAINERS.map((t) => {
-                  const active = t.id === profile.avatarId;
+                  const active = t.id === avatarId;
                   return (
                     <button
                       key={t.id}

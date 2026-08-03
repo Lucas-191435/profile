@@ -1,17 +1,31 @@
 /* eslint-disable @next/next/no-img-element */
 import { IBattlePokemon } from "@/types/IBattle";
 import { backSprite, backSpriteAnimated, frontSprite, frontSpriteAnimated } from "@/utils/sprites";
-import { StatusCard } from "./StatusCard";
+import { StatusCard, StatusCardEffect } from "./StatusCard";
 
 const FIXED_LEVEL = 50;
 
 interface BattleSceneProps {
   opponentPokemon: IBattlePokemon;
   myPokemon: IBattlePokemon;
-  attackingSide?: "me" | "opponent" | null;
+  // Lado cujo sprite deve "reagir" ao evento em exibição (ataque, dano de confusão/status/recuo).
+  shakingSide?: "me" | "opponent" | null;
+  // Lado cujo Pokémon desmaiou NESTE evento — dispara a animação de queda uma única vez.
+  faintSide?: "me" | "opponent" | null;
+  opponentEffect?: StatusCardEffect | null;
+  myEffect?: StatusCardEffect | null;
+  effectKey?: number;
 }
 
-export function BattleScene({ opponentPokemon, myPokemon, attackingSide }: BattleSceneProps) {
+export function BattleScene({
+  opponentPokemon,
+  myPokemon,
+  shakingSide,
+  faintSide,
+  opponentEffect,
+  myEffect,
+  effectKey,
+}: BattleSceneProps) {
   const opponentName = opponentPokemon.myPokemon.nickname || opponentPokemon.myPokemon.pokemon.name;
   const myName = myPokemon.myPokemon.nickname || myPokemon.myPokemon.pokemon.name;
 
@@ -28,17 +42,25 @@ export function BattleScene({ opponentPokemon, myPokemon, attackingSide }: Battl
           hpCurrent={opponentPokemon.currentHp}
           hpMax={opponentPokemon.maxHp}
           align="left"
+          statusCondition={opponentPokemon.statusCondition}
+          effect={opponentEffect}
+          effectKey={effectKey}
         />
       </div>
 
       {/* Opponent sprite - TOP RIGHT */}
       <div className="absolute top-16 right-8 md:right-24">
         <img
+          // Remonta (e reinicia a animação de entrada) sempre que o Pokémon ativo desse lado
+          // muda — troca voluntária, troca forçada por faint, ou o primeiro envio a campo.
+          key={opponentPokemon.id}
           src={frontSpriteAnimated(opponentPokemon.myPokemon.pokemon.pokeId)}
           alt={opponentName}
-          className={`w-32 h-32 md:w-44 md:h-44 object-contain drop-shadow-lg ${
+          className={`w-32 h-32 md:w-44 md:h-44 object-contain drop-shadow-lg animate-sprite-enter ${
             opponentPokemon.fainted ? "grayscale opacity-40" : ""
-          } ${attackingSide === "opponent" ? "animate-attack-shake" : ""}`}
+          } ${shakingSide === "opponent" ? "animate-attack-shake" : ""} ${
+            faintSide === "opponent" ? "animate-faint-drop" : ""
+          }`}
           style={{ imageRendering: "pixelated" }}
         />
       </div>
@@ -46,11 +68,12 @@ export function BattleScene({ opponentPokemon, myPokemon, attackingSide }: Battl
       {/* Player sprite - BOTTOM LEFT */}
       <div className="absolute bottom-10 left-8 md:left-24">
         <img
+          key={myPokemon.id}
           src={backSpriteAnimated(myPokemon.myPokemon.pokemon.pokeId)}
           alt={myName}
-          className={`w-40 h-40 md:w-56 md:h-56 object-contain drop-shadow-lg ${
+          className={`w-40 h-40 md:w-56 md:h-56 object-contain drop-shadow-lg animate-sprite-enter ${
             myPokemon.fainted ? "grayscale opacity-40" : ""
-          } ${attackingSide === "me" ? "animate-attack-shake" : ""}`}
+          } ${shakingSide === "me" ? "animate-attack-shake" : ""} ${faintSide === "me" ? "animate-faint-drop" : ""}`}
           style={{ imageRendering: "pixelated" }}
         />
       </div>
@@ -64,6 +87,9 @@ export function BattleScene({ opponentPokemon, myPokemon, attackingSide }: Battl
           hpMax={myPokemon.maxHp}
           showHpNumbers
           align="right"
+          statusCondition={myPokemon.statusCondition}
+          effect={myEffect}
+          effectKey={effectKey}
         />
       </div>
     </div>
