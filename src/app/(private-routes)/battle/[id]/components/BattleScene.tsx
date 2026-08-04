@@ -1,9 +1,29 @@
 /* eslint-disable @next/next/no-img-element */
+import { useEffect, useRef } from "react";
 import { IBattlePokemon } from "@/types/IBattle";
 import { backSprite, backSpriteAnimated, frontSprite, frontSpriteAnimated } from "@/utils/sprites";
 import { StatusCard, StatusCardEffect } from "./StatusCard";
 
 const FIXED_LEVEL = 50;
+
+// Reinicia animate-attack-shake via classList em vez de depender só da className do React: quando
+// dois eventos seguidos da fila sacodem o MESMO lado (ex.: move com recuo, dois status-tick em
+// sequência), shakingSide não muda entre renders e o React nunca tira/põe a classe — sem isso o
+// navegador não reinicia a animação CSS para o segundo evento.
+function useAttackShake(active: boolean, effectKey: number | undefined) {
+  const ref = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (!active) return;
+    const el = ref.current;
+    if (!el) return;
+    el.classList.remove("animate-attack-shake");
+    void el.offsetWidth;
+    el.classList.add("animate-attack-shake");
+  }, [active, effectKey]);
+
+  return ref;
+}
 
 interface BattleSceneProps {
   opponentPokemon: IBattlePokemon;
@@ -28,6 +48,9 @@ export function BattleScene({
 }: BattleSceneProps) {
   const opponentName = opponentPokemon.myPokemon.nickname || opponentPokemon.myPokemon.pokemon.name;
   const myName = myPokemon.myPokemon.nickname || myPokemon.myPokemon.pokemon.name;
+
+  const opponentShakeRef = useAttackShake(shakingSide === "opponent", effectKey);
+  const myShakeRef = useAttackShake(shakingSide === "me", effectKey);
 
   return (
     <div className="flex-1 relative overflow-hidden bg-gradient-to-b from-[#f8f8e0] via-[#e8e8c8] to-[#d8d8b8]">
@@ -54,13 +77,12 @@ export function BattleScene({
           // Remonta (e reinicia a animação de entrada) sempre que o Pokémon ativo desse lado
           // muda — troca voluntária, troca forçada por faint, ou o primeiro envio a campo.
           key={opponentPokemon.id}
+          ref={opponentShakeRef}
           src={frontSpriteAnimated(opponentPokemon.myPokemon.pokemon.pokeId)}
           alt={opponentName}
           className={`w-32 h-32 md:w-44 md:h-44 object-contain drop-shadow-lg animate-sprite-enter ${
             opponentPokemon.fainted ? "grayscale opacity-40" : ""
-          } ${shakingSide === "opponent" ? "animate-attack-shake" : ""} ${
-            faintSide === "opponent" ? "animate-faint-drop" : ""
-          }`}
+          } ${faintSide === "opponent" ? "animate-faint-drop" : ""}`}
           style={{ imageRendering: "pixelated" }}
         />
       </div>
@@ -69,11 +91,12 @@ export function BattleScene({
       <div className="absolute bottom-10 left-8 md:left-24">
         <img
           key={myPokemon.id}
+          ref={myShakeRef}
           src={backSpriteAnimated(myPokemon.myPokemon.pokemon.pokeId)}
           alt={myName}
           className={`w-40 h-40 md:w-56 md:h-56 object-contain drop-shadow-lg animate-sprite-enter ${
             myPokemon.fainted ? "grayscale opacity-40" : ""
-          } ${shakingSide === "me" ? "animate-attack-shake" : ""} ${faintSide === "me" ? "animate-faint-drop" : ""}`}
+          } ${faintSide === "me" ? "animate-faint-drop" : ""}`}
           style={{ imageRendering: "pixelated" }}
         />
       </div>

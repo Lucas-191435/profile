@@ -260,8 +260,23 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
+  @keyframes tab-nudge {
+    0%, 80%, 100% { transform: translateX(0); }
+    87% { transform: translateX(-5px); }
+    93% { transform: translateX(1px); }
+  }
+
 .animate-bounce-custom {
   animation: bounce 1s infinite;
+}
+
+/* animate-sprite-enter fica sempre no className do sprite (não é condicional) e junto com
+   animate-attack-shake/animate-faint-drop, então as três disputam o shorthand `animation` no
+   mesmo elemento. Com especificidade igual, quem vence é a regra declarada por último no
+   arquivo — por isso animate-sprite-enter precisa vir ANTES das outras duas aqui, senão o
+   navegador aplica só a entrada e o shake/faint nunca chegam a rodar. */
+.animate-sprite-enter {
+  animation: sprite-enter 0.5s ease-out;
 }
 
 .animate-attack-shake {
@@ -284,7 +299,7 @@
   animation: faint-drop 0.6s ease-in forwards;
 }
 
-.animate-sprite-enter {
-  animation: sprite-enter 0.5s ease-out;
+.animate-tab-nudge {
+  animation: tab-nudge 3s ease-in-out infinite;
 }
 }
