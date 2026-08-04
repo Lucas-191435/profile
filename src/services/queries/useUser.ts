@@ -19,6 +19,20 @@ export const useUser = ({ userId, enabled = false }: { userId: string; enabled?:
     });
 }
 
+export const useUsersTest = ( enabled: boolean | undefined = false) => {
+    return useQuery({
+        queryKey: ["users-test"],
+        queryFn: async (): Promise<IUserProps[]> => {
+            const response: {
+                data:  IUserProps[]
+            } = await api.get(`/user/users-test`).request;
+
+            return response.data;
+        },
+        enabled, // Desabilita a consulta por padrão
+    });
+}
+
 export const useUpdateUser = (userId: string) => {
     const queryClient = useQueryClient();
 
