@@ -29,8 +29,7 @@ export function BattleActionsPanel({
   onUseMove,
 }: BattleActionsPanelProps) {
   const selectedMove = selectedMoveIdx !== null ? moves[selectedMoveIdx] : null;
-  const canUseSelectedMove =
-    !!selectedMove && selectedMove.currentPp > 0 && selectedMove.move.power !== null;
+  const canUseSelectedMove = !!selectedMove && selectedMove.currentPp > 0;
 
   return (
     <div className="bg-[#f8f8f8] border-4 border-[#a0a0b8] p-4 min-h-[160px]">
