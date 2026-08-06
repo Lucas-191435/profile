@@ -27,8 +27,7 @@ export function BattleDialogPanel({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
           {moves.map((m, i) => {
-            const isStatusMove = m.move.power === null;
-            const disabled = m.currentPp <= 0 || isStatusMove;
+            const disabled = m.currentPp <= 0;
             const selected = selectedMoveIdx === i;
             return (
               <button
@@ -47,7 +46,6 @@ export function BattleDialogPanel({
               >
                 <span className="text-sm md:text-base leading-tight break-words">
                   {m.move.name}
-                  {isStatusMove && <span className="text-[10px] normal-case ml-1">(em breve)</span>}
                 </span>
                 <span className="text-xs opacity-80 normal-case">
                   PP {m.currentPp}/{m.maxPp}
