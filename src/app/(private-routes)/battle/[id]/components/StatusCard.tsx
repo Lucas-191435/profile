@@ -16,6 +16,7 @@ interface StatusCardProps {
   statusCondition?: StatusCondition;
   effect?: StatusCardEffect | null;
   effectKey?: number;
+  isBot?: boolean;
 }
 
 const STATUS_BADGE: Record<Exclude<StatusCondition, "NONE">, { abbr: string; color: string }> = {
@@ -78,6 +79,7 @@ export function StatusCard({
   statusCondition,
   effect,
   effectKey,
+  isBot,
 }: StatusCardProps) {
   const animatedHp = useAnimatedNumber(hpCurrent);
   const hpPercent = Math.max(0, Math.min(100, (animatedHp / hpMax) * 100));
@@ -121,7 +123,14 @@ export function StatusCard({
       )}
 
       <div className="flex items-center justify-between mb-1">
-        <span className="font-display text-[13px] font-bold text-[#303030] uppercase tracking-wide">{name}</span>
+        <span className="font-display text-[13px] font-bold text-[#303030] uppercase tracking-wide">
+          {name}
+          {isBot && (
+            <span className="ml-1.5 font-display text-[9px] font-black px-1 py-[1px] rounded-sm bg-[#5878b0] text-white align-middle">
+              CPU
+            </span>
+          )}
+        </span>
         <div className="flex items-center gap-1">
           {statusBadge && (
             <span

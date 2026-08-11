@@ -35,6 +35,7 @@ interface BattleSceneProps {
   opponentEffect?: StatusCardEffect | null;
   myEffect?: StatusCardEffect | null;
   effectKey?: number;
+  opponentIsBot?: boolean;
 }
 
 export function BattleScene({
@@ -45,6 +46,7 @@ export function BattleScene({
   opponentEffect,
   myEffect,
   effectKey,
+  opponentIsBot,
 }: BattleSceneProps) {
   const opponentName = opponentPokemon.myPokemon.nickname || opponentPokemon.myPokemon.pokemon.name;
   const myName = myPokemon.myPokemon.nickname || myPokemon.myPokemon.pokemon.name;
@@ -68,6 +70,7 @@ export function BattleScene({
           statusCondition={opponentPokemon.statusCondition}
           effect={opponentEffect}
           effectKey={effectKey}
+          isBot={opponentIsBot}
         />
       </div>
 

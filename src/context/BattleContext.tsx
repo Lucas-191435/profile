@@ -6,10 +6,11 @@ import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Socket } from "socket.io-client";
 import { useBattleSocket } from "@/hooks/useBattleSocket";
-import { useBattleSnapshot, useCreateBattle, useJoinBattle } from "@/services/queries/useBattle";
+import { useBattleSnapshot, useCreateBattle, useJoinBattle, useJoinBattleBot } from "@/services/queries/useBattle";
 import {
   BattleUpdatedEvent,
   IBattle,
+  IBattlePokemon,
   IBattleParticipant,
   IBattleTurnLog,
   OpponentActionSubmittedEvent,
@@ -100,12 +101,19 @@ interface BattleContextType {
   // já chega com o HP final do turno inteiro, então sem isso a barra pularia pro valor final
   // assim que o turno resolve, antes mesmo do shake do golpe que causou aquele dano.
   getDisplayHp: (battlePokemonId: string, actualHp: number, maxHp: number) => number;
+  // Enquanto a troca de Pokémon (evento "switch") de um participante ainda não chegou na frente
+  // da fila de eventos do turno, mostra o Pokémon que estava ativo ANTES do turno em vez do que
+  // já veio trocado no snapshot — sem isso o Pokémon novo aparece (com animação de entrada) antes
+  // mesmo do golpe que derrubou o anterior terminar de tocar, já que o snapshot pós-turno chega
+  // com o `activeSlot` já apontando pro substituto (o backend resolve a troca do bot inline).
+  getDisplayActivePokemon: (participant: IBattleParticipant | null) => IBattlePokemon | null;
   mySubmitted: boolean;
   opponentSubmitted: boolean;
   readyParticipantIds: Set<string>;
   iForfeited: boolean;
   createBattle: (teamName: TeamName) => Promise<{ id: string }>;
   joinBattle: (teamName: TeamName) => Promise<void>;
+  joinBattleBot: (trainerId?: string) => Promise<void>;
   selectLead: (battlePokemonId: string) => Promise<void>;
   ready: () => Promise<void>;
   submitMove: (moveId: string) => Promise<void>;
@@ -123,6 +131,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const queryClient = useQueryClient();
   const createBattleMutation = useCreateBattle();
   const joinBattleMutation = useJoinBattle();
+  const joinBattleBotMutation = useJoinBattleBot();
 
   console.log("Vendo id da batalha", params.id)
 
@@ -134,6 +143,9 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [mySubmittedForTurn, setMySubmittedForTurn] = useState<number | null>(null);
   const [opponentSubmittedForTurn, setOpponentSubmittedForTurn] = useState<number | null>(null);
   const [iForfeited, setIForfeited] = useState(false);
+  // participantId -> activeSlot de ANTES do turno, só enquanto o evento "switch" correspondente
+  // ainda não chegou na frente da fila (ver comentário de getDisplayActivePokemon abaixo).
+  const [frozenActiveSlot, setFrozenActiveSlot] = useState<Record<string, number>>({});
   const [turnEventQueue, setTurnEventQueue] = useState<TurnLogEntry[]>([]);
   const [lastBattleId, setLastBattleId] = useState(battleId);
   const battleRef = useRef<IBattle | null>(null);
@@ -181,6 +193,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setLastBattleId(battleId);
     if (readyParticipantIds.size > 0) setReadyParticipantIds(new Set());
     if (turnEventQueue.length > 0) setTurnEventQueue([]);
+    if (Object.keys(frozenActiveSlot).length > 0) setFrozenActiveSlot({});
   }
 
   // Chave da última sala que este socket (socket.id muda a cada reconexão) confirmou ter
@@ -276,6 +289,27 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const handleTurnResolved = async (event: TurnResolvedEvent) => {
+      // Congela o Pokémon ativo ATUAL (pré-turno) de todo participante que troca neste turno —
+      // precisa ser lido de `battleRef.current` (o snapshot de ANTES desse turno) porque o
+      // refetch logo abaixo já vai trazer o `activeSlot` pós-troca (o backend resolve a troca do
+      // bot inline, então ela já chega pronta no mesmo snapshot do turno que a causou). Sem isso
+      // o Pokémon novo entraria em cena assim que o refetch resolvesse, antes do golpe que
+      // derrubou o anterior sequer começar a tocar.
+      const preTurnBattle = battleRef.current;
+      const switchEvents = event.log.filter(
+        (entry): entry is Extract<TurnLogEntry, { event: "switch" }> => entry.event === "switch",
+      );
+      if (preTurnBattle && switchEvents.length > 0) {
+        setFrozenActiveSlot((prev) => {
+          const next = { ...prev };
+          for (const switchEvent of switchEvents) {
+            const participant = preTurnBattle.participants.find((p) => p.id === switchEvent.participantId);
+            if (participant) next[switchEvent.participantId] = participant.activeSlot;
+          }
+          return next;
+        });
+      }
+
       // Espera o snapshot com o HP final do turno chegar ANTES de empilhar os eventos na fila:
       // getDisplayHp soma o dano pendente da fila em cima do `actualHp` do snapshot, então se a
       // fila fosse preenchida antes do refetch resolver, esse `actualHp` ainda seria o do turno
@@ -335,6 +369,17 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       await joinRoom();
     },
     [joinBattleMutation, battleId, refetch, joinRoom],
+  );
+
+  const joinBattleBot = useCallback(
+    async (trainerId?: string) => {
+      await joinBattleBotMutation.mutateAsync({ battleId, trainerId });
+      // playerA (o humano atual) já está na sala do socket desde que a batalha foi criada —
+      // join-bot só preenche o playerB no backend, então basta atualizar o snapshot REST pra
+      // pegar o novo status (SELECTING_LEAD) e o participante bot, sem precisar reentrar na sala.
+      await refetch();
+    },
+    [joinBattleBotMutation, battleId, refetch],
   );
 
   const selectLead = useCallback(
@@ -402,6 +447,17 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setPrevActiveTurnEvent(activeTurnEvent);
     if (headDamageRevealed) setHeadDamageRevealed(false);
     setEventSeq((s) => s + 1);
+    // O evento "switch" virou o topo da fila — é a partir de agora que o Pokémon substituto deve
+    // aparecer (com a animação de entrada), então libera o congelamento feito em handleTurnResolved.
+    if (activeTurnEvent?.event === "switch" && activeTurnEvent.participantId in frozenActiveSlot) {
+      const participantId = activeTurnEvent.participantId;
+      setFrozenActiveSlot((prev) => {
+        if (!(participantId in prev)) return prev;
+        const next = { ...prev };
+        delete next[participantId];
+        return next;
+      });
+    }
   }
 
   useEffect(() => {
@@ -433,6 +489,15 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     [pendingDamageByPokemon],
   );
 
+  const getDisplayActivePokemon = useCallback(
+    (participant: IBattleParticipant | null) => {
+      if (!participant) return null;
+      const slot = frozenActiveSlot[participant.id] ?? participant.activeSlot;
+      return participant.pokemons.find((p) => p.position === slot) ?? null;
+    },
+    [frozenActiveSlot],
+  );
+
   const submitMove = useCallback((moveId: string) => submitAction({ type: "MOVE", moveId }), [submitAction]);
   const submitSwitch = useCallback(
     (targetPokemonId: string) => submitAction({ type: "SWITCH", targetPokemonId }),
@@ -458,12 +523,14 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         activeTurnEventSeq: eventSeq,
         advanceTurnEvent,
         getDisplayHp,
+        getDisplayActivePokemon,
         mySubmitted,
         opponentSubmitted,
         readyParticipantIds,
         iForfeited,
         createBattle,
         joinBattle,
+        joinBattleBot,
         selectLead,
         ready,
         submitMove,

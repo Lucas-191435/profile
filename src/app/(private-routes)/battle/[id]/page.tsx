@@ -100,6 +100,7 @@ const Batalha = () => {
     activeTurnEventSeq,
     advanceTurnEvent,
     getDisplayHp,
+    getDisplayActivePokemon,
     mySubmitted,
     opponentSubmitted,
     readyParticipantIds,
@@ -131,12 +132,12 @@ const Batalha = () => {
   }, [battle?.turnNumber]);
 
   const myActive = useMemo(
-    () => myParticipant?.pokemons.find((p) => p.position === myParticipant.activeSlot) ?? null,
-    [myParticipant],
+    () => getDisplayActivePokemon(myParticipant),
+    [myParticipant, getDisplayActivePokemon],
   );
   const opponentActive = useMemo(
-    () => opponentParticipant?.pokemons.find((p) => p.position === opponentParticipant.activeSlot) ?? null,
-    [opponentParticipant],
+    () => getDisplayActivePokemon(opponentParticipant),
+    [opponentParticipant, getDisplayActivePokemon],
   );
 
   const dialogText = useMemo(() => {
@@ -272,6 +273,7 @@ const Batalha = () => {
           myEffect={myEffect}
           opponentEffect={opponentEffect}
           effectKey={activeTurnEventSeq}
+          opponentIsBot={opponentParticipant?.isBot}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 border-t-4 border-[#404058]">
