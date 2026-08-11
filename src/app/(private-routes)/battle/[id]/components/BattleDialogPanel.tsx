@@ -1,5 +1,6 @@
 import { MenuView } from "./types";
 import { IBattlePokemonMove } from "@/types/IBattle";
+import typeColors from "@/utils/typesColors";
 
 interface BattleDialogPanelProps {
   menuView: MenuView;
@@ -47,8 +48,16 @@ export function BattleDialogPanel({
                 <span className="text-sm md:text-base leading-tight break-words">
                   {m.move.name}
                 </span>
-                <span className="text-xs opacity-80 normal-case">
-                  PP {m.currentPp}/{m.maxPp}
+                <span className="flex items-center justify-between gap-2 normal-case">
+                  <span className="text-xs opacity-80">
+                    PP {m.currentPp}/{m.maxPp}
+                  </span>
+                  {m.move.type && (
+                    <span className="flex items-center gap-1 shrink-0">
+                      <span className={`${typeColors[m.move.type] ?? "bg-muted"} w-2 h-2 rounded-full shrink-0`} />
+                      <span className="text-[10px] opacity-80">{m.move.type}</span>
+                    </span>
+                  )}
                 </span>
               </button>
             );

@@ -17,6 +17,27 @@ interface StatusCardProps {
   effect?: StatusCardEffect | null;
   effectKey?: number;
   isBot?: boolean;
+  // Estado (vivo/desmaiado) de cada Pokémon do time, na ordem do time — usado pra desenhar a
+  // fileira de pokebolas que indica quantos Pokémon do treinador ainda restam na batalha.
+  team?: { fainted: boolean }[];
+}
+
+// Ícone de pokebola clássico: metade vermelha, metade branca, com o botão central — cinza e
+// "apagado" quando o Pokémon correspondente já desmaiou.
+function PokeballIcon({ fainted }: { fainted: boolean }) {
+  return (
+    <svg viewBox="0 0 16 16" className="w-[13px] h-[13px]" aria-hidden>
+      <circle cx="8" cy="8" r="7" fill={fainted ? "#c0c0b8" : "#f87058"} stroke="#303030" strokeWidth="1.2" />
+      <path
+        d="M1 8 A7 7 0 0 1 15 8 Z"
+        fill={fainted ? "#e0e0d8" : "#f8f8d8"}
+        stroke="#303030"
+        strokeWidth="1.2"
+      />
+      <line x1="1" y1="8" x2="15" y2="8" stroke="#303030" strokeWidth="1.2" />
+      <circle cx="8" cy="8" r="2.2" fill={fainted ? "#c0c0b8" : "#f8f8d8"} stroke="#303030" strokeWidth="1.2" />
+    </svg>
+  );
 }
 
 const STATUS_BADGE: Record<Exclude<StatusCondition, "NONE">, { abbr: string; color: string }> = {
@@ -80,6 +101,7 @@ export function StatusCard({
   effect,
   effectKey,
   isBot,
+  team,
 }: StatusCardProps) {
   const animatedHp = useAnimatedNumber(hpCurrent);
   const hpPercent = Math.max(0, Math.min(100, (animatedHp / hpMax) * 100));
@@ -155,6 +177,13 @@ export function StatusCard({
       {showHpNumbers && (
         <div className="text-right font-display text-[10px] text-[#303030] mt-0.5">
           {Math.round(animatedHp)}/{hpMax}
+        </div>
+      )}
+      {team && team.length > 0 && (
+        <div className={`flex items-center gap-[3px] mt-1.5 ${align === "right" ? "justify-end" : "justify-start"}`}>
+          {team.map((pokemon, idx) => (
+            <PokeballIcon key={idx} fainted={pokemon.fainted} />
+          ))}
         </div>
       )}
     </div>

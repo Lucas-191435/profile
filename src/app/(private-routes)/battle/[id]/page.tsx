@@ -268,6 +268,8 @@ const Batalha = () => {
             currentHp: getDisplayHp(opponentActive.id, opponentActive.currentHp, opponentActive.maxHp),
           }}
           myPokemon={{ ...myActive, currentHp: getDisplayHp(myActive.id, myActive.currentHp, myActive.maxHp) }}
+          opponentTeam={opponentParticipant?.pokemons}
+          myTeam={myParticipant.pokemons}
           shakingSide={shakingSide}
           faintSide={faintSide}
           myEffect={myEffect}

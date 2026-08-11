@@ -42,6 +42,23 @@ function isSocketErrorResponse(response: unknown): boolean {
   return !("id" in anyRes) && !("received" in anyRes);
 }
 
+// Se o evento derrubou o Pokémon ativo de algum participante, devolve o id desse participante —
+// usado pra saber quem precisa ter o slot ativo congelado até a troca aparecer na fila (ver
+// handleTurnResolved), mesmo quando o evento "switch" correspondente só chega num turno-resolved
+// seguinte (ex.: o adversário venceu a troca forçada e ainda precisa escolher o substituto).
+function getFaintedParticipantId(entry: TurnLogEntry): string | null {
+  switch (entry.event) {
+    case "move":
+      return entry.targetFainted ? entry.targetParticipantId : null;
+    case "confusion-hit":
+    case "status-tick":
+    case "recoil":
+      return entry.targetFainted ? entry.participantId : null;
+    default:
+      return null;
+  }
+}
+
 // Extrai o efeito de HP (se houver) de um evento de log — unifica dano (positivo) e cura
 // (negativo, pra manter a barra "baixa" até a animação de heal revelar o valor real).
 function getHpEffect(entry: TurnLogEntry): { battlePokemonId: string; delta: number } | null {
@@ -143,9 +160,12 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [mySubmittedForTurn, setMySubmittedForTurn] = useState<number | null>(null);
   const [opponentSubmittedForTurn, setOpponentSubmittedForTurn] = useState<number | null>(null);
   const [iForfeited, setIForfeited] = useState(false);
-  // participantId -> activeSlot de ANTES do turno, só enquanto o evento "switch" correspondente
-  // ainda não chegou na frente da fila (ver comentário de getDisplayActivePokemon abaixo).
-  const [frozenActiveSlot, setFrozenActiveSlot] = useState<Record<string, number>>({});
+  // participantId -> { slot de ANTES do turno, evento que libera o congelamento } — enquanto
+  // congelado, mostra esse slot antigo em vez do `activeSlot` já trocado no snapshot (ver
+  // comentário de getDisplayActivePokemon abaixo e de handleTurnResolved sobre o releaseEntry).
+  const [frozenActiveSlot, setFrozenActiveSlot] = useState<Record<string, { slot: number; releaseEntry: TurnLogEntry }>>(
+    {},
+  );
   const [turnEventQueue, setTurnEventQueue] = useState<TurnLogEntry[]>([]);
   const [lastBattleId, setLastBattleId] = useState(battleId);
   const battleRef = useRef<IBattle | null>(null);
@@ -289,24 +309,55 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const handleTurnResolved = async (event: TurnResolvedEvent) => {
-      // Congela o Pokémon ativo ATUAL (pré-turno) de todo participante que troca neste turno —
-      // precisa ser lido de `battleRef.current` (o snapshot de ANTES desse turno) porque o
-      // refetch logo abaixo já vai trazer o `activeSlot` pós-troca (o backend resolve a troca do
-      // bot inline, então ela já chega pronta no mesmo snapshot do turno que a causou). Sem isso
-      // o Pokémon novo entraria em cena assim que o refetch resolvesse, antes do golpe que
-      // derrubou o anterior sequer começar a tocar.
+      // Congela o Pokémon ativo ATUAL (pré-turno) de todo participante que troca neste turno, OU
+      // cujo Pokémon ativo desmaiou neste turno — precisa ser lido de `battleRef.current` (o
+      // snapshot de ANTES desse turno) porque o refetch logo abaixo já vai trazer o `activeSlot`
+      // pós-troca (o backend resolve a troca do bot inline, então ela já chega pronta no mesmo
+      // snapshot do turno que a causou). Sem isso o Pokémon novo entraria em cena assim que o
+      // refetch resolvesse, antes do golpe que derrubou o anterior sequer começar a tocar.
+      // Cada congelamento guarda o evento (`releaseEntry`) que deve liberá-lo: se houver um
+      // "switch" neste mesmo lote, libera assim que ele virar o topo da fila (o substituto entra
+      // junto com a animação de troca). Se não houver — ex.: o time humano ainda precisa escolher
+      // o substituto na troca forçada, e o "switch" só chega num turn-resolved seguinte — libera
+      // assim que o PRÓPRIO evento de desmaio terminar de tocar, sem depender de um switch que
+      // pode nunca aparecer (senão o Pokémon desmaiado fica preso na tela pra sempre).
       const preTurnBattle = battleRef.current;
-      const switchEvents = event.log.filter(
-        (entry): entry is Extract<TurnLogEntry, { event: "switch" }> => entry.event === "switch",
-      );
-      if (preTurnBattle && switchEvents.length > 0) {
+      const switchEntryByParticipant = new Map<string, Extract<TurnLogEntry, { event: "switch" }>>();
+      for (const entry of event.log) {
+        if (entry.event === "switch") switchEntryByParticipant.set(entry.participantId, entry);
+      }
+      const releaseEntryByParticipant = new Map<string, TurnLogEntry>();
+      for (const entry of event.log) {
+        const faintedParticipantId = getFaintedParticipantId(entry);
+        if (faintedParticipantId && !releaseEntryByParticipant.has(faintedParticipantId)) {
+          releaseEntryByParticipant.set(faintedParticipantId, entry);
+        }
+      }
+      for (const [participantId, switchEntry] of switchEntryByParticipant) {
+        releaseEntryByParticipant.set(participantId, switchEntry);
+      }
+      if (releaseEntryByParticipant.size > 0) {
         setFrozenActiveSlot((prev) => {
           const next = { ...prev };
-          for (const switchEvent of switchEvents) {
-            const participant = preTurnBattle.participants.find((p) => p.id === switchEvent.participantId);
-            if (participant) next[switchEvent.participantId] = participant.activeSlot;
+          let changed = false;
+          for (const [participantId, releaseEntry] of releaseEntryByParticipant) {
+            const existing = next[participantId];
+            if (existing) {
+              // Já congelado por um lote anterior (desmaio sem switch ainda) — se este lote trouxe
+              // o switch, troca o gatilho de liberação pra ele em vez do desmaio original.
+              if (releaseEntry.event === "switch" && existing.releaseEntry !== releaseEntry) {
+                next[participantId] = { ...existing, releaseEntry };
+                changed = true;
+              }
+              continue;
+            }
+            const participant = preTurnBattle?.participants.find((p) => p.id === participantId);
+            if (participant) {
+              next[participantId] = { slot: participant.activeSlot, releaseEntry };
+              changed = true;
+            }
           }
-          return next;
+          return changed ? next : prev;
         });
       }
 
@@ -444,20 +495,27 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // evita o efeito extra de só resetar quando activeTurnEvent mudar.
   const [prevActiveTurnEvent, setPrevActiveTurnEvent] = useState<TurnLogEntry | null>(null);
   if (activeTurnEvent !== prevActiveTurnEvent) {
+    const leavingTurnEvent = prevActiveTurnEvent;
     setPrevActiveTurnEvent(activeTurnEvent);
     if (headDamageRevealed) setHeadDamageRevealed(false);
     setEventSeq((s) => s + 1);
-    // O evento "switch" virou o topo da fila — é a partir de agora que o Pokémon substituto deve
-    // aparecer (com a animação de entrada), então libera o congelamento feito em handleTurnResolved.
-    if (activeTurnEvent?.event === "switch" && activeTurnEvent.participantId in frozenActiveSlot) {
-      const participantId = activeTurnEvent.participantId;
-      setFrozenActiveSlot((prev) => {
-        if (!(participantId in prev)) return prev;
-        const next = { ...prev };
-        delete next[participantId];
-        return next;
-      });
-    }
+    // Libera o congelamento de qualquer participante cujo `releaseEntry` (definido em
+    // handleTurnResolved) seja o evento que ACABOU de virar o topo da fila (caso "switch": o
+    // substituto entra em cena junto com a animação de troca) ou o evento que a fila ACABOU de
+    // deixar pra trás (caso desmaio sem switch em vista: libera só depois da animação de desmaio
+    // terminar de tocar, sem depender de um switch que pode nunca chegar).
+    setFrozenActiveSlot((prev) => {
+      let next: typeof prev | null = null;
+      for (const [participantId, frozen] of Object.entries(prev)) {
+        const releasedByArrival = activeTurnEvent?.event === "switch" && frozen.releaseEntry === activeTurnEvent;
+        const releasedByDeparture = frozen.releaseEntry === leavingTurnEvent;
+        if (releasedByArrival || releasedByDeparture) {
+          if (!next) next = { ...prev };
+          delete next[participantId];
+        }
+      }
+      return next ?? prev;
+    });
   }
 
   useEffect(() => {
@@ -492,7 +550,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const getDisplayActivePokemon = useCallback(
     (participant: IBattleParticipant | null) => {
       if (!participant) return null;
-      const slot = frozenActiveSlot[participant.id] ?? participant.activeSlot;
+      const slot = frozenActiveSlot[participant.id]?.slot ?? participant.activeSlot;
       return participant.pokemons.find((p) => p.position === slot) ?? null;
     },
     [frozenActiveSlot],
