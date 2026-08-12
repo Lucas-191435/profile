@@ -28,6 +28,10 @@ function useAttackShake(active: boolean, effectKey: number | undefined) {
 interface BattleSceneProps {
   opponentPokemon: IBattlePokemon;
   myPokemon: IBattlePokemon;
+  // Time completo de cada treinador (na ordem de `position`) — usado só pra desenhar a fileira de
+  // pokebolas indicando quantos Pokémon de cada lado já desmaiaram.
+  opponentTeam?: IBattlePokemon[];
+  myTeam?: IBattlePokemon[];
   // Lado cujo sprite deve "reagir" ao evento em exibição (ataque, dano de confusão/status/recuo).
   shakingSide?: "me" | "opponent" | null;
   // Lado cujo Pokémon desmaiou NESTE evento — dispara a animação de queda uma única vez.
@@ -35,16 +39,20 @@ interface BattleSceneProps {
   opponentEffect?: StatusCardEffect | null;
   myEffect?: StatusCardEffect | null;
   effectKey?: number;
+  opponentIsBot?: boolean;
 }
 
 export function BattleScene({
   opponentPokemon,
   myPokemon,
+  opponentTeam,
+  myTeam,
   shakingSide,
   faintSide,
   opponentEffect,
   myEffect,
   effectKey,
+  opponentIsBot,
 }: BattleSceneProps) {
   const opponentName = opponentPokemon.myPokemon.nickname || opponentPokemon.myPokemon.pokemon.name;
   const myName = myPokemon.myPokemon.nickname || myPokemon.myPokemon.pokemon.name;
@@ -68,6 +76,8 @@ export function BattleScene({
           statusCondition={opponentPokemon.statusCondition}
           effect={opponentEffect}
           effectKey={effectKey}
+          isBot={opponentIsBot}
+          team={opponentTeam && [...opponentTeam].sort((a, b) => a.position - b.position)}
         />
       </div>
 
@@ -113,6 +123,7 @@ export function BattleScene({
           statusCondition={myPokemon.statusCondition}
           effect={myEffect}
           effectKey={effectKey}
+          team={myTeam && [...myTeam].sort((a, b) => a.position - b.position)}
         />
       </div>
     </div>

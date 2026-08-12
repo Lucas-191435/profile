@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from "react";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useBattleContext } from "@/context/BattleContext";
 import { IBattleParticipant, TurnLogEntry } from "@/types/IBattle";
@@ -100,6 +101,7 @@ const Batalha = () => {
     activeTurnEventSeq,
     advanceTurnEvent,
     getDisplayHp,
+    getDisplayActivePokemon,
     mySubmitted,
     opponentSubmitted,
     readyParticipantIds,
@@ -131,12 +133,12 @@ const Batalha = () => {
   }, [battle?.turnNumber]);
 
   const myActive = useMemo(
-    () => myParticipant?.pokemons.find((p) => p.position === myParticipant.activeSlot) ?? null,
-    [myParticipant],
+    () => getDisplayActivePokemon(myParticipant),
+    [myParticipant, getDisplayActivePokemon],
   );
   const opponentActive = useMemo(
-    () => opponentParticipant?.pokemons.find((p) => p.position === opponentParticipant.activeSlot) ?? null,
-    [opponentParticipant],
+    () => getDisplayActivePokemon(opponentParticipant),
+    [opponentParticipant, getDisplayActivePokemon],
   );
 
   const dialogText = useMemo(() => {
@@ -260,18 +262,21 @@ const Batalha = () => {
 
   return (
     <div className="h-screen bg-background flex overflow-hidden">
-      <div className="flex-1 min-w-0 overflow-y-auto flex flex-col px-4 py-6 sm:px-8 sm:py-10 md:px-16 md:py-16 lg:px-[100px] lg:py-[60px] xl:px-[200px] xl:py-[100px]">
+      <div className="flex-1 min-w-0 overflow-y-auto flex flex-col px-4 pt-6 pb-14 sm:px-8 sm:py-10 md:px-16 md:py-16 lg:px-[100px] lg:py-[60px] xl:px-[200px] xl:py-[100px]">
         <BattleScene
           opponentPokemon={{
             ...opponentActive,
             currentHp: getDisplayHp(opponentActive.id, opponentActive.currentHp, opponentActive.maxHp),
           }}
           myPokemon={{ ...myActive, currentHp: getDisplayHp(myActive.id, myActive.currentHp, myActive.maxHp) }}
+          opponentTeam={opponentParticipant?.pokemons}
+          myTeam={myParticipant.pokemons}
           shakingSide={shakingSide}
           faintSide={faintSide}
           myEffect={myEffect}
           opponentEffect={opponentEffect}
           effectKey={activeTurnEventSeq}
+          opponentIsBot={opponentParticipant?.isBot}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 border-t-4 border-[#404058]">
@@ -329,8 +334,9 @@ const Batalha = () => {
 
         <button
           onClick={() => void forfeit()}
-          className="fixed bottom-4 right-4 font-display text-[10px] tracking-widest text-muted-foreground hover:text-destructive underline"
+          className="fixed bottom-4 right-4 z-20 flex items-center gap-1.5 rounded-full border-2 border-red-900 bg-red-200 hover:bg-red-300 px-3 py-1.5 font-display text-[10px] sm:text-[11px] font-bold tracking-widest text-red-900 shadow-[3px_3px_0_rgba(0,0,0,0.35)] transition-colors"
         >
+          <LogOut className="w-3.5 h-3.5" />
           Desistir da batalha
         </button>
       </div>

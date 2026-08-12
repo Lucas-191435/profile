@@ -60,6 +60,19 @@ export interface IBattleParticipant {
   pendingAction: { type: BattleActionType } | null;
   forfeited: boolean;
   pokemons: IBattlePokemon[];
+  isBot: boolean;
+}
+
+// GET /user/users-test — lista de treinadores de teste disponíveis pra virar bot via join-bot.
+export interface IUserTest {
+  id: string;
+  email: string;
+  name: string;
+  avatar: string | null;
+  description: string | null;
+  role: "TEST";
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Confirmado 1:1 com battle-engine.service.ts (TurnLogEntry) no backend.

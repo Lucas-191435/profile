@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { api } from "../api";
-import { BattleStatus, IBattle, TeamName } from "@/types/IBattle";
+import { BattleStatus, IBattle, IUserTest, TeamName } from "@/types/IBattle";
 import { errorToast } from "@/utils/toasts";
 
 export const useBattleSnapshot = ({ battleId, enabled = true }: { battleId: string; enabled?: boolean }) => {
@@ -36,6 +36,29 @@ export const useJoinBattle = () => {
         onError: (error: AxiosError<{ message: string }>) => {
             errorToast({ description: error.response?.data?.message ?? "Erro ao entrar na batalha." });
         },
+    });
+};
+
+export const useJoinBattleBot = () => {
+    return useMutation({
+        mutationFn: async (data: { battleId: string; trainerId?: string }): Promise<{ id: string; trainerId: string; trainerName: string }> => {
+            const response = await api.post(`/battle/${data.battleId}/join-bot`, data.trainerId ? { trainerId: data.trainerId } : {}).request;
+            return response.data;
+        },
+        onError: (error: AxiosError<{ message: string }>) => {
+            errorToast({ description: error.response?.data?.message ?? "Erro ao batalhar contra a CPU." });
+        },
+    });
+};
+
+export const useTestTrainers = ({ enabled = true }: { enabled?: boolean } = {}) => {
+    return useQuery({
+        queryKey: ["user-test-trainers"],
+        queryFn: async (): Promise<IUserTest[]> => {
+            const response: { data: IUserTest[] } = await api.get("/user/users-test").request;
+            return response.data;
+        },
+        enabled,
     });
 };
 

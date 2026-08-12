@@ -16,6 +16,28 @@ interface StatusCardProps {
   statusCondition?: StatusCondition;
   effect?: StatusCardEffect | null;
   effectKey?: number;
+  isBot?: boolean;
+  // Estado (vivo/desmaiado) de cada Pokémon do time, na ordem do time — usado pra desenhar a
+  // fileira de pokebolas que indica quantos Pokémon do treinador ainda restam na batalha.
+  team?: { fainted: boolean }[];
+}
+
+// Ícone de pokebola clássico: metade vermelha, metade branca, com o botão central — cinza e
+// "apagado" quando o Pokémon correspondente já desmaiou.
+function PokeballIcon({ fainted }: { fainted: boolean }) {
+  return (
+    <svg viewBox="0 0 16 16" className="w-[10px] h-[10px] sm:w-[13px] sm:h-[13px]" aria-hidden>
+      <circle cx="8" cy="8" r="7" fill={fainted ? "#c0c0b8" : "#f87058"} stroke="#303030" strokeWidth="1.2" />
+      <path
+        d="M1 8 A7 7 0 0 1 15 8 Z"
+        fill={fainted ? "#e0e0d8" : "#f8f8d8"}
+        stroke="#303030"
+        strokeWidth="1.2"
+      />
+      <line x1="1" y1="8" x2="15" y2="8" stroke="#303030" strokeWidth="1.2" />
+      <circle cx="8" cy="8" r="2.2" fill={fainted ? "#c0c0b8" : "#f8f8d8"} stroke="#303030" strokeWidth="1.2" />
+    </svg>
+  );
 }
 
 const STATUS_BADGE: Record<Exclude<StatusCondition, "NONE">, { abbr: string; color: string }> = {
@@ -78,6 +100,8 @@ export function StatusCard({
   statusCondition,
   effect,
   effectKey,
+  isBot,
+  team,
 }: StatusCardProps) {
   const animatedHp = useAnimatedNumber(hpCurrent);
   const hpPercent = Math.max(0, Math.min(100, (animatedHp / hpMax) * 100));
@@ -97,7 +121,7 @@ export function StatusCard({
 
   return (
     <div
-      className={`relative bg-[#f8f8d8] border-[3px] border-[#404058] rounded-md px-3 py-2 shadow-[4px_4px_0_rgba(0,0,0,0.35)] min-w-[220px] ${
+      className={`relative bg-[#f8f8d8] border-[2px] sm:border-[3px] border-[#404058] rounded-md px-2 py-1.5 sm:px-3 sm:py-2 shadow-[3px_3px_0_rgba(0,0,0,0.35)] sm:shadow-[4px_4px_0_rgba(0,0,0,0.35)] min-w-[150px] sm:min-w-[180px] md:min-w-[220px] ${
         align === "right" ? "text-right" : ""
       } ${isStatusFlash ? "animate-status-flash" : ""} ${isCureFlash ? "animate-cure-flash" : ""}`}
       style={flashColor ? ({ "--status-flash-color": flashColor } as React.CSSProperties) : undefined}
@@ -120,23 +144,30 @@ export function StatusCard({
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-1">
-        <span className="font-display text-[13px] font-bold text-[#303030] uppercase tracking-wide">{name}</span>
+      <div className="flex items-center justify-between mb-0.5 sm:mb-1">
+        <span className="font-display text-[11px] sm:text-[12px] md:text-[13px] font-bold text-[#303030] uppercase tracking-wide">
+          {name}
+          {isBot && (
+            <span className="ml-1.5 font-display text-[8px] sm:text-[9px] font-black px-1 py-[1px] rounded-sm bg-[#5878b0] text-white align-middle">
+              CPU
+            </span>
+          )}
+        </span>
         <div className="flex items-center gap-1">
           {statusBadge && (
             <span
-              className="font-display text-[9px] font-black px-1 py-[1px] rounded-sm text-white uppercase"
+              className="font-display text-[8px] sm:text-[9px] font-black px-1 py-[1px] rounded-sm text-white uppercase"
               style={{ backgroundColor: statusBadge.color }}
             >
               {statusBadge.abbr}
             </span>
           )}
-          <span className="font-display text-[11px] text-[#303030]">Lv{level}</span>
+          <span className="font-display text-[10px] sm:text-[11px] text-[#303030]">Lv{level}</span>
         </div>
       </div>
       <div className="flex items-center gap-1">
-        <span className="text-[10px] font-black text-[#c88030] italic">HP</span>
-        <div className="flex-1 h-[6px] bg-[#303030] rounded-full overflow-hidden border border-[#303030]">
+        <span className="text-[9px] sm:text-[10px] font-black text-[#c88030] italic">HP</span>
+        <div className="flex-1 h-[5px] sm:h-[6px] bg-[#303030] rounded-full overflow-hidden border border-[#303030]">
           <div
             className={`h-full bg-gradient-to-b transition-all duration-500 ease-out ${barColorClass}`}
             style={{ width: `${hpPercent}%` }}
@@ -144,8 +175,15 @@ export function StatusCard({
         </div>
       </div>
       {showHpNumbers && (
-        <div className="text-right font-display text-[10px] text-[#303030] mt-0.5">
+        <div className="text-right font-display text-[9px] sm:text-[10px] text-[#303030] mt-0.5">
           {Math.round(animatedHp)}/{hpMax}
+        </div>
+      )}
+      {team && team.length > 0 && (
+        <div className={`flex items-center gap-[2px] sm:gap-[3px] mt-1 sm:mt-1.5 ${align === "right" ? "justify-end" : "justify-start"}`}>
+          {team.map((pokemon, idx) => (
+            <PokeballIcon key={idx} fainted={pokemon.fainted} />
+          ))}
         </div>
       )}
     </div>
