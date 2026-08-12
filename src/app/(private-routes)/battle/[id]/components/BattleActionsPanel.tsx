@@ -32,7 +32,7 @@ export function BattleActionsPanel({
   const canUseSelectedMove = !!selectedMove && selectedMove.currentPp > 0;
 
   return (
-    <div className="bg-[#f8f8f8] border-4 border-[#a0a0b8] p-4 min-h-[160px]">
+    <div className="bg-[#f8f8f8] border-4 border-[#a0a0b8] p-3 sm:p-4 min-h-[100px] sm:min-h-[130px] md:min-h-[160px]">
       {menuView === "main" ? (
         <div className="grid grid-cols-2 gap-3 h-full">
           <ActionButton onClick={onOpenAttacks} color="red" icon={<Swords className="w-4 h-4" />} disabled={locked}>

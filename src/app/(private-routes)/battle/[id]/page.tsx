@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from "react";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useBattleContext } from "@/context/BattleContext";
 import { IBattleParticipant, TurnLogEntry } from "@/types/IBattle";
@@ -333,8 +334,9 @@ const Batalha = () => {
 
         <button
           onClick={() => void forfeit()}
-          className="fixed bottom-4 right-4 font-display text-[10px] tracking-widest text-muted-foreground hover:text-destructive underline"
+          className="fixed bottom-4 right-4 z-20 flex items-center gap-1.5 rounded-full border-2 border-red-900 bg-red-200 hover:bg-red-300 px-3 py-1.5 font-display text-[10px] sm:text-[11px] font-bold tracking-widest text-red-900 shadow-[3px_3px_0_rgba(0,0,0,0.35)] transition-colors"
         >
+          <LogOut className="w-3.5 h-3.5" />
           Desistir da batalha
         </button>
       </div>

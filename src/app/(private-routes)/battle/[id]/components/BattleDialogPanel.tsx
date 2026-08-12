@@ -20,9 +20,9 @@ export function BattleDialogPanel({
   onSelectMove,
 }: BattleDialogPanelProps) {
   return (
-    <div className="bg-[#3858a0] border-4 border-[#c8a038] border-r-0 min-h-[160px] p-5 flex items-center">
+    <div className="bg-[#3858a0] border-4 border-[#c8a038] border-r-0 min-h-[100px] sm:min-h-[130px] md:min-h-[160px] p-3 sm:p-4 md:p-5 flex items-center">
       {menuView === "main" ? (
-        <p className="font-display text-lg md:text-xl text-white leading-relaxed">
+        <p className="font-display text-sm sm:text-base md:text-xl text-white leading-relaxed">
           {dialogText || `O que ${activePokemonName} deve fazer?`}
         </p>
       ) : (
