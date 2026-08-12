@@ -262,7 +262,7 @@ const Batalha = () => {
 
   return (
     <div className="h-screen bg-background flex overflow-hidden">
-      <div className="flex-1 min-w-0 overflow-y-auto flex flex-col px-4 py-6 sm:px-8 sm:py-10 md:px-16 md:py-16 lg:px-[100px] lg:py-[60px] xl:px-[200px] xl:py-[100px]">
+      <div className="flex-1 min-w-0 overflow-y-auto flex flex-col px-4 pt-6 pb-14 sm:px-8 sm:py-10 md:px-16 md:py-16 lg:px-[100px] lg:py-[60px] xl:px-[200px] xl:py-[100px]">
         <BattleScene
           opponentPokemon={{
             ...opponentActive,
