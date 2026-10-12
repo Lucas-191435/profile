@@ -7,27 +7,26 @@ import { IPokemonComplete } from "@/types/IPokemon";
 type UseGetPokemonsParams = {
     page?: number;
     pageSize?: number;
-    type?: string;
-    gen?: string;
     query?: string;
     types?: string[];
+    regions?: string[];
 };
 export const useGetPokemons = (params: UseGetPokemonsParams) => {
     return useQuery({
         queryKey: ["get-pokemons", {
             page: params.page,
             pageSize: params.pageSize,
-            type: params.type,
-            gen: params.gen,
             query: params.query,
-            types: params.types
+            types: params.types,
+            regions: params.regions
         }],
         queryFn: async (): Promise<IGetPokemons> => {
             const queryString = new URLSearchParams({
                 page: params.page?.toString() || "1",
                 pageSize: params.pageSize?.toString() || "20",
                 query: params.query || "",
-                types: params.types ? params.types.join(",") : ""
+                types: params.types ? params.types.join(",") : "",
+                regions: params.regions ? params.regions.join(",") : ""
             });
             const response: { data:  IGetPokemons  } = await api.get(`/pokemon?${queryString.toString()}`).request;
             return response.data;

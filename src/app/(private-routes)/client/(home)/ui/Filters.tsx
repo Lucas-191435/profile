@@ -1,17 +1,11 @@
 import SearchBar from "./SearchBar";
-
-
 import ModalFilters from "./ModalFilters";
 
 const Filter = () => {
     return (
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <div className="flex flex-row gap-3 items-center">
             <SearchBar />
-            {/* <ModalFilters
-                selectedTypes={selectedTypes}
-                setSelectedTypes={setSelectedTypes}
-                selectedGen={selectedGen}
-                setSelectedGen={setSelectedGen} /> */}
+            <ModalFilters />
         </div>
     )
 }
