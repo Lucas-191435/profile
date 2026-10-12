@@ -213,6 +213,7 @@ export function Sidebar() {
             variant="ghost"
             size="icon"
             className="fixed left-4 top-4 z-50 h-10 w-10 rounded-xl bg-sidebar shadow-lg md:hidden"
+            data-tour="mobile-menu"
           >
             <Menu className="h-5 w-5 text-sidebar-foreground" />
           </Button>

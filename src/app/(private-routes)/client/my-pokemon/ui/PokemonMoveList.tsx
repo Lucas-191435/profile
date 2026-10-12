@@ -10,6 +10,7 @@ import { useMyPokemonContext } from "@/context/MyPokemonContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUpdatePokemonMoves } from "@/services/queries/useMyPokemon";
+import { TestLock } from "@/components/shared/TestLock";
 
 const MAX_MOVES = 4;
 
@@ -108,9 +109,11 @@ const PokemonMoveList = ({ selectedPokemon, isEditMove, isEditTeam, setEditMove 
             </div>
 
             {!isEditMove && (
-              <Button disabled={isEditTeam} size="sm" className="font-body glow-red" onClick={handleEditMove}>
-                <Edit className="mr-2 h-4 w-4" /> Editar
-              </Button>
+              <TestLock>
+                <Button disabled={isEditTeam} size="sm" className="font-body glow-red" onClick={handleEditMove}>
+                  <Edit className="mr-2 h-4 w-4" /> Editar
+                </Button>
+              </TestLock>
             )}
 
             {isEditMove && (

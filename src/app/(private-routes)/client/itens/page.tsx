@@ -14,13 +14,16 @@ import { useIsMobile } from "@/hooks/useMobile";
 import { useItemContext } from "@/context/ItemContext";
 import { sounds } from "@/utils/sounds";
 import { Button } from "@/components/ui/button";
+import { usePageTour } from "@/components/tour/TourProvider";
+import { itemsTour } from "@/constants/tours";
 
 const ItemPage = () => {
   // const [activeCategory, setActiveCategory] = useState<number>(0);
   const [selectedItem, setSelectedItem] = useState<IItem | null>(null);
   // const { data } = useGetItems({ page: 1, pageSize: 50, categoryId: activeCategory, query: debouncedSearch });
 
-  const { items, activeCategory, handleCategoryChange, querySearch, handleSearchChange } = useItemContext();
+  const { items, isLoading, activeCategory, handleCategoryChange, querySearch, handleSearchChange } = useItemContext();
+  usePageTour(itemsTour, { ready: !isLoading });
   return (
     <ContainerSidebar className="p-4 lg:p-8 space-y-6">
       <div>

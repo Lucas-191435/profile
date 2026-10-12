@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useLeavePokemon } from "@/services/queries/useMyPokemon";
+import { TestLock } from "@/components/shared/TestLock";
 
 const MyCollection = () => {
     const { pokemons, isLoading: contextLoading, error: contextError, myCollection, setMyCollection } = useMyPokemonContext();
@@ -23,7 +24,7 @@ const MyCollection = () => {
 
     return (
         <>
-            <section>
+            <section data-tour="mp-collection">
                 <h2 className="font-display text-lg font-semibold mb-3 text-muted-foreground">Minha Coleção</h2>
                 <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
                     {myPokemon.map((p) => {
@@ -41,16 +42,19 @@ const MyCollection = () => {
                                     />
                                 )}
 
-                                <div
-                                    role="button"
-                                    className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive flex items-center justify-center hover:bg-red-600 z-50 shadow-sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                       handleLeavePokemon(p.id);
-                                    }}
-                                >
-                                    <X className="w-3 h-3 text-white" />
-                                </div>
+                                <TestLock>
+                                    <div
+                                        role="button"
+                                        data-tour="mp-remove"
+                                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive flex items-center justify-center hover:bg-red-600 z-50 shadow-sm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                           handleLeavePokemon(p.id);
+                                        }}
+                                    >
+                                        <X className="w-3 h-3 text-white" />
+                                    </div>
+                                </TestLock>
 
                                 <div className={!owned ? "grayscale" : ""}>
                                     <img src={p.pokemon.img1} alt={p.pokemon.name} className="w-full aspect-square object-contain" />

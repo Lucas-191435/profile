@@ -2,7 +2,7 @@ import { ContentWrapper } from "@/components/layout/ContentWrapper";
 import { Chat } from "@/components/chat";
 
 import { Sidebar } from "@/components/sidebar/sidebar-client";
-import { TourGuide } from "@/components/tour/TourGuide";
+import { TourProvider } from "@/components/tour/TourProvider";
 import { SoundProvider } from "@/context/SoundContext";
 import { ChatCollapseProvider } from "@/hooks/useChatCollapse";
 import { SidebarCollapseProvider } from "@/hooks/useSidebarCollapse";
@@ -23,14 +23,15 @@ const ClientLayout = async ({ children }: { children: React.ReactNode }) => {
       <ChatCollapseProvider>
         <ChatProvider>
 
-        <TourGuide />
+        <TourProvider>
         <SoundProvider>
           <Sidebar />
           <ContentWrapper >
             {children}
           </ContentWrapper>
-          <Chat /> 
+          <Chat />
         </SoundProvider>
+        </TourProvider>
         </ChatProvider>
       </ChatCollapseProvider>
     </SidebarCollapseProvider>

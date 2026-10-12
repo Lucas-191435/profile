@@ -10,11 +10,15 @@ import MyCollection from "./ui/MyCollection";
 import MyPokemonSkeleton from "./ui/MyPokemonSkeleton";
 
 import TeamsPokemon from "./ui/TeamsPokemon";
+import { TestUserBanner } from "@/components/shared/TestUserBanner";
+import { usePageTour } from "@/components/tour/TourProvider";
+import { myPokemonTour } from "@/constants/tours";
 
 const MyPokemonPage = () => {
   const {
     isLoading: contextLoading,
   } = useMyPokemonContext();
+  usePageTour(myPokemonTour, { ready: !contextLoading });
 
   if (contextLoading) {
     return <MyPokemonSkeleton />;
@@ -25,6 +29,8 @@ const MyPokemonPage = () => {
       <h1 className="font-display text-2xl font-bold tracking-wide flex items-center gap-2">
         <Users className="w-6 h-6 text-primary" /> Meu Pokémon
       </h1>
+
+      <TestUserBanner />
 
       {/* Collection */}
       <MyCollection />

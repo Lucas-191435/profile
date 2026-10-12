@@ -135,6 +135,7 @@ export function BattleButton() {
     <>
       <Button
         onClick={handleClick}
+        data-tour="btn-battle"
         size="sm"
         className="bg-primary hover:bg-primary/90 text-primary-foreground font-display tracking-wider gap-2 glow-red"
       >

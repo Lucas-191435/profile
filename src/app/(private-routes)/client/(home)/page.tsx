@@ -7,7 +7,11 @@ import { usePokemonContext } from "@/context/PokemonContext";
 import PokemonGrid from "./ui/PokemonGrid";
 import { sounds } from "@/utils/sounds";
 import { useIsMobile } from "@/hooks/useMobile";
+import { usePageTour } from "@/components/tour/TourProvider";
+import { homeTour } from "@/constants/tours";
 const ClientHomePage = () => {
+  const { isLoading } = usePokemonContext();
+  usePageTour(homeTour, { ready: !isLoading });
 
   return (
 
@@ -104,7 +108,7 @@ const PaginationControls = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-4 px-4">
+    <div className="flex flex-col items-center justify-center space-y-4 px-4" data-tour="home-pagination">
        <div className="sm:hidden flex flex-wrap items-center justify-center gap-1 sm:gap-2 w-full max-w-4xl overflow-x-auto pb-2">
         {/* Página anterior */}
         <Button

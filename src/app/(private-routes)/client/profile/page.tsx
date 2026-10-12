@@ -18,6 +18,8 @@ import { useMyPokemon } from "@/services/queries/useMyPokemon";
 import { useUser, useUpdateUser } from "@/services/queries/useUser";
 import { useAuth } from "@/hooks/useAuth";
 import { TRAINERS } from "@/utils/trainers";
+import { TestLock } from "@/components/shared/TestLock";
+import { TestUserBanner } from "@/components/shared/TestUserBanner";
 
 
 
@@ -117,24 +119,28 @@ const ClientHomePage = () => {
           <UserCircle2 className="w-6 h-6 text-primary" /> Meu Perfil
         </h1>
 
+        <TestUserBanner />
+
         {/* Identity card */}
         <Card className="border-primary/30 bg-card/80 overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-r from-primary/30 via-primary/10 to-transparent pointer-events-none" />
           <CardContent className="">
             <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
-              <button
-                onClick={() => setAvatarOpen(true)}
-                className="relative group shrink-0"
-                aria-label="Trocar avatar"
-              >
-                <Avatar className="w-24 h-24 border-4 border-card ring-2 ring-primary/50 bg-background">
-                  <AvatarImage src={trainer.url} alt={trainer.name} className="object-contain" />
-                  <AvatarFallback className="font-display">{trainer.name[0]}</AvatarFallback>
-                </Avatar>
-                <span className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
-                  <Pencil className="w-3 h-3" />
-                </span>
-              </button>
+              <TestLock>
+                <button
+                  onClick={() => setAvatarOpen(true)}
+                  className="relative group shrink-0"
+                  aria-label="Trocar avatar"
+                >
+                  <Avatar className="w-24 h-24 border-4 border-card ring-2 ring-primary/50 bg-background">
+                    <AvatarImage src={trainer.url} alt={trainer.name} className="object-contain" />
+                    <AvatarFallback className="font-display">{trainer.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <span className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                    <Pencil className="w-3 h-3" />
+                  </span>
+                </button>
+              </TestLock>
 
               <div className="flex-1 min-w-0 space-y-2">
                 {editing ? (
@@ -173,9 +179,11 @@ const ClientHomePage = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Button size="sm" variant="outline" onClick={startEdit}>
-                    <Pencil className="w-4 h-4 mr-1" /> Editar
-                  </Button>
+                  <TestLock>
+                    <Button size="sm" variant="outline" onClick={startEdit}>
+                      <Pencil className="w-4 h-4 mr-1" /> Editar
+                    </Button>
+                  </TestLock>
                 )}
               </div>
             </div>

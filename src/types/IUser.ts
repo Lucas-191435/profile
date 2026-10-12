@@ -1,6 +1,7 @@
 export enum Role {
   Client = "CLIENT",
   Admin = "ADMIN",
+  Test = "TEST",
 }
 
 export type IUser = {

@@ -31,6 +31,7 @@ export function Chat() {
         isChatCollapsed ? (
             <Suspense fallback={<h1>Loading...</h1>}>
                 <aside
+                    data-tour="chat"
                     className={cn(
                         "fixed right-0 top-0 z-40",
                         "flex h-screen flex-col bg-sidebar text-sidebar-foreground",
@@ -63,7 +64,7 @@ export function Chat() {
                 </aside>
             </Suspense>
         ) : (
-            <div className="fixed
+            <div data-tour="chat" className="fixed
             border-2 border-primary rounded-full
             right-5 bottom-20 z-40 flex h-[50px] transition-all duration-300 ease-spring bg-sidebar text-sidebar-foreground w-[50px]">
                 <MessageCircle className="m-auto w-6 h-6 text-primary cursor-pointer" onClick={handleToggleChat} />

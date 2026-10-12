@@ -7,10 +7,10 @@ import { useChatCollapse } from "@/hooks/useChatCollapse";
 import { sounds } from "@/utils/sounds";
 import ControlSound from "./ControlSound";
 import SocialLinks from "./SocialLinks";
-import { File, Route } from "lucide-react";
+import { File } from "lucide-react";
 import Link from "next/link";
-import { Button } from "../ui/button";
 import { BattleButton } from "../BattleButton";
+import { TourMenu } from "../tour/TourMenu";
 export function ContentWrapper({ children }: { children: React.ReactNode }) {
   // const isMobile = useIsMobile();
   const { isCollapsed } = useSidebarCollapse();
@@ -18,9 +18,6 @@ export function ContentWrapper({ children }: { children: React.ReactNode }) {
   // if (isMobile) {
   //   return <>{children}</>;
   // }
-
-  console.log("isCollapsed", isCollapsed);
-  console.log("isChatCollapsed", isChatCollapsed);
 
   return (
     <div
@@ -33,9 +30,7 @@ export function ContentWrapper({ children }: { children: React.ReactNode }) {
     >
       <div className="min-h-[81px] border-b border-sidebar-border flex items-center justify-end px-4">
         <BattleButton />
-        <Button className="border-1 m-2 p-1 rounded-sm cursor-pointer" onClick={() => window.resetTour() }>
-          <Route className="w-6 h-6 text-white" />
-        </Button>
+        <TourMenu />
         <Link href="/curriculum" rel="noopener noreferrer" className="border-1 m-2 p-1 rounded-sm cursor-pointer"  data-tour="btn-curriculum">
           <File className="w-6 h-6 text-primary" />
         </Link>

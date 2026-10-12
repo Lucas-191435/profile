@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PokemonMoveList from "./PokemonMoveList";
 import typeColors from "@/utils/typesColors";
+import { TestLock } from "@/components/shared/TestLock";
 
 const emptyTeam = (name: string): Team => ({
     name,
@@ -175,7 +176,7 @@ const TeamsPokemon = () => {
                 >
                     <div className="flex md:flex-row flex-col items-center justify-between gap-2">
 
-                        <TabsList className="bg-card/60 border border-border/50">
+                        <TabsList className="bg-card/60 border border-border/50" data-tour="mp-teams-tabs">
                             {teams.map((t: { name: string }, i) => (
                                 <TabsTrigger key={i} value={String(i)} className="cursor-pointer font-display text-xs tracking-wider" onClick={() => handleTeam(teamsName[t.name as keyof typeof teamsName])}>
                                     {t.name}
@@ -184,9 +185,11 @@ const TeamsPokemon = () => {
                         </TabsList>
 
                         {!isEditTeam  &&
-                            <Button disabled={isEditMove} size="sm" className="font-body glow-red" onClick={handleEditTeam}>
-                                <Edit className="mr-2 h-4 w-4" /> Editar
-                            </Button>
+                            <TestLock>
+                                <Button disabled={isEditMove} size="sm" className="font-body glow-red" onClick={handleEditTeam} data-tour="mp-edit-team">
+                                    <Edit className="mr-2 h-4 w-4" /> Editar
+                                </Button>
+                            </TestLock>
                         }
 
                         {isEditTeam && !isEditMove && (
@@ -203,7 +206,7 @@ const TeamsPokemon = () => {
 
                     {teams.map((team, tIdx) => (
                         <TabsContent key={tIdx} value={String(tIdx)} className="mt-4">
-                            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3" data-tour="mp-team-slots">
                                 {team.slots.map((slot, sIdx) => {
                                     const poke = slot.pokemonId ? getPokemon(slot.pokemonId) : null;
                                     const isSelected = selectedSlotIdx === sIdx;

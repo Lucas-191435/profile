@@ -23,7 +23,7 @@ const PokemonGrid = () => {
         );
     }
     return (
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 min-h-[1200px]">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 min-h-[1200px]" data-tour="home-grid">
             {pokemons?.pokemon.map(( pokemon ) => (
                 <PokemonCard key={pokemon.number} pokemon={pokemon} />
             ))}
