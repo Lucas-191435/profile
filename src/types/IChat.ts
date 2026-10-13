@@ -1,6 +1,7 @@
 export interface IMessageSender {
   id: string;
   name: string;
+  avatar?: string | null;
 }
 
 export interface IMessage {

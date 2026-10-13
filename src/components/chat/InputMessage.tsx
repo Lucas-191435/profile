@@ -39,8 +39,8 @@ const InputMessage = () => {
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        if (e.target.value.length > MAX_LENGTH) return;
-        setText(e.target.value);
+        // Corta no limite em vez de descartar: um texto colado maior que o limite não some.
+        setText(e.target.value.slice(0, MAX_LENGTH));
         e.target.style.height = "auto";
         e.target.style.height = `${e.target.scrollHeight}px`;
     };
@@ -96,15 +96,20 @@ const InputMessage = () => {
                     value={text}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
+                    maxLength={MAX_LENGTH}
                     placeholder="Escreva uma mensagem..."
-                    className="min-h-0 max-h-32 border-none resize-none w-full overflow-x-hidden overflow-y-auto [field-sizing:normal] !bg-secondary !border-border !text-muted-foreground
-                        focus-visible:!border-border focus-visible:!ring-0
-                        focus-visible:!ring-transparent focus-visible:!outline-none py-2"
+                    className={cn(
+                        "min-h-0 max-h-32 border-none resize-none w-full overflow-x-hidden overflow-y-auto scrollbar-premium [field-sizing:normal] !bg-secondary !border-border !text-muted-foreground",
+                        "focus-visible:!border-border focus-visible:!ring-0 focus-visible:!ring-transparent focus-visible:!outline-none",
+                        "py-2 pl-1 leading-relaxed [overflow-wrap:anywhere]",
+                        // Reserva espaço à direita para o contador não ficar por cima do texto.
+                        showCounter ? "pr-9" : "pr-2",
+                    )}
                 />
                 {showCounter && (
                     <span
                         className={cn(
-                            "absolute bottom-1 right-1 text-xs pointer-events-none",
+                            "absolute bottom-2 right-3 text-[10px] tabular-nums pointer-events-none",
                             remaining <= 10 ? "text-destructive" : "text-muted-foreground/60",
                         )}
                     >

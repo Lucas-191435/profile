@@ -10,7 +10,9 @@ import {
   ChevronLeft,
   Menu,
   LogOut,
+  Lock,
 } from "lucide-react";
+import { useIsTestUser } from "@/hooks/useIsTestUser";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -49,6 +51,7 @@ function SidebarContent({
   onNavClick?: () => void;
 }) {
   const pathname = usePathname();
+  const isTestUser = useIsTestUser();
 
   return (
     <>
@@ -166,6 +169,27 @@ function SidebarContent({
               Conectado à PokéDex Nacional
             </p>
           </div>
+        )}
+
+        {isTestUser && (
+          collapsed ? (
+            <div
+              className="mt-4 mx-auto flex h-9 w-9 items-center justify-center rounded-xl border border-yellow-500/30 bg-yellow-500/10"
+              title="Conta de teste: modo somente leitura"
+            >
+              <Lock className="h-4 w-4 text-yellow-400" />
+            </div>
+          ) : (
+            <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-yellow-500/10 to-transparent border border-yellow-500/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Lock className="h-3.5 w-3.5 text-yellow-400" />
+                <span className="text-xs font-display font-semibold text-yellow-400">Conta de teste</span>
+              </div>
+              <p className="text-xs text-sidebar-foreground/60">
+                Você está logado com um treinador de teste. Pode explorar e batalhar, mas não editar dados.
+              </p>
+            </div>
+          )
         )}
       </nav>
 
