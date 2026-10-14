@@ -9,9 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trophy, Skull, Sparkles, Pencil, Check, UserCircle2, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useMyPokemon } from "@/services/queries/useMyPokemon";
@@ -20,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { TRAINERS } from "@/utils/trainers";
 import { TestLock } from "@/components/shared/TestLock";
 import { TestUserBanner } from "@/components/shared/TestUserBanner";
+import { AvatarPicker } from "@/components/shared/AvatarPicker";
 
 
 
@@ -64,7 +63,7 @@ const ClientHomePage = () => {
   const saveEdit = () => {
     updateUserMutation.mutate({
       name: draft.name.trim().slice(0, 50) || "Treinador",
-      description: draft.description.trim().slice(0, 240),
+      description: draft.description.trim().slice(0, 160),
       avatar: avatarId,
     });
     setEditing(false);
@@ -154,7 +153,7 @@ const ClientHomePage = () => {
                     />
                     <Textarea
                       value={draft.description}
-                      maxLength={240}
+                      maxLength={160}
                       onChange={(e) => setDraft({ ...draft, description: e.target.value })}
                       placeholder="Descrição"
                       className="font-body text-sm"
@@ -284,35 +283,12 @@ const ClientHomePage = () => {
           </CardContent>
         </Card>
 
-        {/* Avatar picker */}
-        <Dialog open={avatarOpen} onOpenChange={setAvatarOpen}>
-          <DialogContent className="bg-card border-border/50 max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="font-display">Escolha seu avatar</DialogTitle>
-              <DialogDescription>Selecione um treinador da franquia Pokémon.</DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="max-h-[60vh] pr-2">
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                {TRAINERS.map((t) => {
-                  const active = t.id === avatarId;
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => pickAvatar(t.id)}
-                      className={`rounded-xl border-2 p-2 flex flex-col items-center gap-1 transition-all hover:scale-105 ${active ? "border-primary bg-primary/10 shadow-lg shadow-primary/20" : "border-border/40 bg-background/40"
-                        }`}
-                    >
-                      <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-background to-muted rounded-lg overflow-hidden">
-                        <img src={t.url} alt={t.name} className="max-w-full max-h-full object-contain" />
-                      </div>
-                      <span className="font-display text-xs tracking-wide">{t.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-          </DialogContent>
-        </Dialog>
+        <AvatarPicker
+          open={avatarOpen}
+          onOpenChange={setAvatarOpen}
+          selectedId={avatarId}
+          onSelect={pickAvatar}
+        />
       </div>
     </ContainerSidebar>
   );

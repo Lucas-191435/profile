@@ -54,21 +54,12 @@ export const useUpdateUser = (userId: string) => {
 };
 
 
+// Erros (409 = e-mail já cadastrado) são tratados por quem chama, para poder marcar o campo no form
 export const useCreateUser = () => {
-    // const queryClient = useQueryClient();
-
     return useMutation({
-        mutationFn: async (body: {name: string, email: string,  password: string, avatar: string}): Promise<any> => {
+        mutationFn: async (body: { name: string, email: string, password: string, avatar?: string, description?: string }): Promise<IUserProps> => {
             const response = await api.post(`/user`, body).request;
             return response.data;
         },
-        onSuccess: () => {
-            successToast({
-                description: "User criado com sucesso!"
-            })
-        },
-        onError: (error: AxiosError<{ success: boolean, error: string }>) => {
-            console.log("Erro ao criar usuário", error.response?.data);
-        }
     });
 };

@@ -11,16 +11,18 @@ interface PokemonCardProps {
 }
 
 const typeColors: Record<string, string> = {
-    fire: "bg-fire", water: "bg-water", grass: "bg-grass", electric: "bg-electric",
-    normal: "bg-muted-foreground", poison: "bg-purple-500", ground: "bg-amber-700",
-    fairy: "bg-pink-400", bug: "bg-lime-500", psychic: "bg-pink-500",
-    flying: "bg-sky-400", fighting: "bg-orange-700", rock: "bg-amber-800",
-    ghost: "bg-purple-700", ice: "bg-cyan-300", dragon: "bg-indigo-600",
-    dark: "bg-zinc-700", steel: "bg-zinc-400",
+    normal: "#A8A77A", fire: "#EE8130", water: "#6390F0", electric: "#F7D02C",
+    grass: "#7AC74C", ice: "#96D9D6", fighting: "#C22E28", poison: "#A33EA1",
+    ground: "#E2BF65", flying: "#A98FF3", psychic: "#F95587", bug: "#A6B91A",
+    rock: "#B6A136", ghost: "#735797", dragon: "#6F35FC", dark: "#705746",
+    steel: "#B7B7CE", fairy: "#D685AD",
 };
+
+const getTypeColor = (type: string) => typeColors[type] ?? "#A8A77A";
 
 const PokemonCard = ({ pokemon }: PokemonCardProps) => {
     const { handleSoundChange } = useSoundContext();
+    const mainColor = getTypeColor(pokemon.types[0]);
     return (
         <Link href={`/client/pokemon/${pokemon.number}`} onClick={() => handleSoundChange(pokemon.name as any)} className="block">
             <div className="card-pokemon group cursor-hover relative">
@@ -29,17 +31,11 @@ const PokemonCard = ({ pokemon }: PokemonCardProps) => {
                         <Music size={18} />
                     </div>
                 )}
-                <div className="flex flex-row sm:flex-col md:flex-row gap-1 justify-between items-start mb-2">
-                    <span className="text-muted-foreground font-display text-xs font-semibold">#{pokemon.number.toString().padStart(3, "0")}</span>
-                    <div className="flex gap-1">
-                        {pokemon.types.map((type) => (
-                            <span key={type} className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full text-foreground ${typeColors[type] || "bg-muted"}`}>
-                                {type}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-                <div className="flex justify-center items-center py-4 h-48 sm:h-40 md:h-44 lg:h-48 overflow-hidden">
+                <span className="text-muted-foreground font-display text-xs font-semibold">#{pokemon.number.toString().padStart(3, "0")}</span>
+                <div
+                    className="flex justify-center items-center py-4 h-48 sm:h-40 md:h-44 lg:h-48 overflow-hidden rounded-lg"
+                    style={{ background: `radial-gradient(circle at center, ${mainColor}33 0%, transparent 65%)` }}
+                >
                     <Image
                         src={pokemon.img3}
                         alt={`Imagem de ${pokemon.name}`}
@@ -51,6 +47,25 @@ const PokemonCard = ({ pokemon }: PokemonCardProps) => {
                     />
                 </div>
                 <h3 className="text-center font-display text-sm font-semibold capitalize tracking-wide">{pokemon.name}</h3>
+                <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+                    {pokemon.types.map((type) => {
+                        const color = getTypeColor(type);
+                        return (
+                            <span
+                                key={type}
+                                className="inline-flex items-center gap-1.5 text-[11px] font-semibold capitalize px-2.5 py-0.5 rounded-full border"
+                                style={{
+                                    backgroundColor: `${color}26`,
+                                    borderColor: `${color}66`,
+                                    color: `color-mix(in srgb, ${color} 65%, white)`,
+                                }}
+                            >
+                                <span className="size-1.5 rounded-full" style={{ backgroundColor: color }} />
+                                {type}
+                            </span>
+                        );
+                    })}
+                </div>
             </div>
         </Link>
     )

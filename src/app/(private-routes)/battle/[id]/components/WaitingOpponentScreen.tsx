@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { Bot, Check, Copy, Loader2, Shuffle, Swords } from "lucide-react";
+import { Bot, Check, Copy, Loader2, Shuffle, Swords, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -57,51 +57,111 @@ export function WaitingOpponentScreen({ battleId, teamLabel }: WaitingOpponentSc
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-6 p-6">
-      <div className="relative">
-        <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl animate-pulse" />
-        <Swords className="w-16 h-16 text-primary relative" />
-      </div>
-      <div className="text-center space-y-2">
-        <h1 className="font-display text-2xl font-black tracking-wider text-glow">
-          AGUARDANDO OPONENTE
-        </h1>
-        <p className="font-body text-muted-foreground text-sm">
-          Time {teamLabel} pronto. Envie o link abaixo para alguém entrar na batalha.
-        </p>
-      </div>
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-background p-6 overflow-hidden">
+      {/* Fundo: grade sutil + brilhos */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.07]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+          maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+          WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+        }}
+      />
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-primary/15 blur-[120px]" />
+      <div className="pointer-events-none absolute -bottom-48 -right-32 w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[120px]" />
 
-      <div className="flex items-center gap-2 w-full max-w-md">
-        <input
-          readOnly
-          value={inviteUrl}
-          onClick={(e) => e.currentTarget.select()}
-          className="flex-1 rounded-lg border border-border/50 bg-card px-3 py-2 font-body text-xs truncate"
-        />
-        <Button onClick={handleCopy} variant="outline" size="icon">
-          {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-        </Button>
-      </div>
+      <div className="relative w-full max-w-3xl flex flex-col items-center gap-8">
+        {/* Título */}
+        <div className="text-center space-y-3">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-body text-xs font-semibold text-primary">
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-75 animate-ping" />
+              <span className="relative inline-flex size-2 rounded-full bg-primary" />
+            </span>
+            Sala aberta
+          </span>
+          <h1 className="font-display text-3xl sm:text-4xl font-black tracking-wider text-glow">
+            AGUARDANDO OPONENTE
+          </h1>
+          <p className="font-body text-muted-foreground text-base">
+            Time <span className="text-foreground font-semibold">{teamLabel}</span> pronto para a batalha.
+          </p>
+        </div>
 
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        <span className="font-body text-xs">Esperando alguém entrar...</span>
-      </div>
+        {/* Você VS ??? */}
+        <div className="flex items-center justify-center gap-4 sm:gap-10">
+          <div className="flex flex-col items-center gap-2">
+            <div className="size-20 sm:size-24 rounded-2xl border-2 border-primary bg-primary/10 glow-red flex items-center justify-center">
+              <Swords className="size-10 sm:size-12 text-primary" />
+            </div>
+            <span className="font-display text-xs sm:text-sm tracking-widest">{teamLabel.toUpperCase()}</span>
+          </div>
 
-      <div className="w-full max-w-md flex flex-col items-center gap-3 pt-2 border-t border-border/30">
-        <span className="font-body text-xs text-muted-foreground pt-3">ou</span>
+          <span className="font-display text-3xl sm:text-5xl font-black italic text-primary text-glow">VS</span>
 
-        <Button
-          variant="outline"
-          onClick={() => {
-            setSelectedTrainerId(null);
-            setBotDialogOpen(true);
-          }}
-          className="gap-2"
-        >
-          <Bot className="w-4 h-4" />
-          Batalhar contra a CPU
-        </Button>
+          <div className="flex flex-col items-center gap-2">
+            <div className="size-20 sm:size-24 rounded-2xl border-2 border-dashed border-muted-foreground/40 bg-card/50 flex items-center justify-center animate-pulse">
+              <span className="font-display text-4xl text-muted-foreground/60">?</span>
+            </div>
+            <span className="flex items-center gap-1.5 font-display text-xs sm:text-sm tracking-widest text-muted-foreground">
+              <Loader2 className="size-3 animate-spin" />
+              ...
+            </span>
+          </div>
+        </div>
+
+        {/* Opções */}
+        <div className="grid w-full gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur p-5 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="size-11 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center">
+                <Users className="size-5" />
+              </div>
+              <div>
+                <h2 className="font-display text-sm font-bold tracking-wide">Desafiar um amigo</h2>
+                <p className="font-body text-sm text-muted-foreground">Envie o link e espere ele entrar.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-auto">
+              <input
+                readOnly
+                value={inviteUrl}
+                onClick={(e) => e.currentTarget.select()}
+                className="min-w-0 flex-1 rounded-lg border border-border/50 bg-background/60 px-3 h-11 font-body text-xs truncate"
+              />
+              <Button onClick={handleCopy} variant="outline" className="h-11 gap-2 shrink-0">
+                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                {copied ? "Copiado" : "Copiar"}
+              </Button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedTrainerId(null);
+              setBotDialogOpen(true);
+            }}
+            className="group relative overflow-hidden rounded-2xl border border-primary/50 bg-gradient-to-br from-primary/25 via-primary/10 to-card p-5 text-left flex flex-col gap-4 transition-all hover:border-primary hover:-translate-y-1 hover:shadow-[0_0_30px_hsl(0_85%_55%/0.35)] cursor-pointer"
+          >
+            <Bot className="pointer-events-none absolute -right-4 -bottom-6 size-32 text-primary/10 transition-transform group-hover:scale-110 group-hover:-rotate-6" />
+            <div className="flex items-center gap-3">
+              <div className="size-11 rounded-xl bg-primary/20 text-primary flex items-center justify-center">
+                <Bot className="size-5" />
+              </div>
+              <div>
+                <h2 className="font-display text-sm font-bold tracking-wide">Batalhar contra a CPU</h2>
+                <p className="font-body text-sm text-muted-foreground">Não quer esperar? Lute agora.</p>
+              </div>
+            </div>
+            <span className="mt-auto inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary font-display text-sm font-bold tracking-wider text-primary-foreground glow-red transition-colors group-hover:bg-primary/90">
+              <Swords className="size-4" />
+              LUTAR AGORA
+            </span>
+          </button>
+        </div>
       </div>
 
       <Dialog

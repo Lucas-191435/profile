@@ -17,7 +17,10 @@ import {
 import { log } from "../../../../../logger";
 import {
   useRouter,
+  useSearchParams,
 } from "next/navigation";
+import Link from "next/link";
+import { PublicRoutes } from "@/constants/mapperRoutes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -35,11 +38,13 @@ const LoginComponentPage = () => {
   const [selectedTestUserId, setSelectedTestUserId] = useState<string | null>(null);
 
   const router = useRouter();
+  // Vindo do cadastro quando o login automático falha
+  const searchParams = useSearchParams();
 
   const form = useForm(
     {
       defaultValues: {
-        email: "",
+        email: searchParams.get("email") ?? "",
         password: "",
       },
       resolver: yupResolver(authSchema),
@@ -134,6 +139,12 @@ const LoginComponentPage = () => {
           >
             Login
           </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            Ainda não tem conta?{" "}
+            <Link href={PublicRoutes.login.create} className="text-primary hover:underline">
+              Criar conta
+            </Link>
+          </p>
           {/* <button
             onClick={handleResetPassword}
             className="mt-4 text-sm text-blue-500 hover:underline hover:cursor-pointer"

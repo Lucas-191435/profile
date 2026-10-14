@@ -2,6 +2,7 @@ const PublicRoutes = {
   login: {
     forgotPassword: "/forgot-password",
     resetPassword: "/reset-password",
+    create: "/create",
     defaultPage: "/login",
   },
 };
