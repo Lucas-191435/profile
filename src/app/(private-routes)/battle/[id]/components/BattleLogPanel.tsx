@@ -1,21 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { IBattle } from "@/types/IBattle";
-import { describeTurnLog, ownerParticipantId } from "../lib/describeTurnLog";
+import { describeTurnLog, namesFromBattle, ownerParticipantId } from "../lib/describeTurnLog";
 import { sounds } from "@/utils/sounds";
 
 interface BattleLogPanelProps {
   battle: IBattle;
   myParticipantId: string;
-  currentUserId?: string;
+  // Enquanto a playback narra um turno, os logs desse turno em diante ficam escondidos — o
+  // snapshot já os traz, mas mostrá-los aqui entregaria o resultado antes da animação.
+  hideFromTurn?: number | null;
 }
 
-export function BattleLogPanel({ battle, myParticipantId, currentUserId }: BattleLogPanelProps) {
+export function BattleLogPanel({ battle, myParticipantId, hideFromTurn }: BattleLogPanelProps) {
   const [open, setOpen] = useState(false);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
+  const names = useMemo(() => namesFromBattle(battle, myParticipantId), [battle, myParticipantId]);
+  const turnLogs = useMemo(
+    () => (hideFromTurn == null ? battle.turnLogs : battle.turnLogs.filter((log) => log.turnNumber < hideFromTurn)),
+    [battle.turnLogs, hideFromTurn],
+  );
 
   return (
     <>
@@ -34,7 +41,7 @@ export function BattleLogPanel({ battle, myParticipantId, currentUserId }: Battl
         <span className={open ? undefined : "animate-tab-nudge"}>
           {open ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
         </span>
-        {!open && battle.turnLogs.length > 0 && (
+        {!open && turnLogs.length > 0 && (
           <span className="absolute -top-1 -right-1 flex size-2.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
             <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
@@ -61,11 +68,11 @@ export function BattleLogPanel({ battle, myParticipantId, currentUserId }: Battl
           <p className="text-xs font-body text-muted-foreground mt-0.5">Clique em um evento para ver o JSON.</p>
         </div>
         <ScrollArea className="flex-1 min-h-0 px-3 py-3">
-          {battle.turnLogs.length === 0 ? (
+          {turnLogs.length === 0 ? (
             <p className="text-sm font-body text-muted-foreground px-1">Nenhum evento ainda.</p>
           ) : (
             <ul className="space-y-2">
-              {battle.turnLogs.map((log) => {
+              {turnLogs.map((log) => {
                 const owner = ownerParticipantId(log);
                 const isMine = owner === myParticipantId;
                 const isOpponent = owner !== null && !isMine;
@@ -98,7 +105,7 @@ export function BattleLogPanel({ battle, myParticipantId, currentUserId }: Battl
                         />
                       </div>
                       <p className="text-sm font-body leading-snug">
-                        {describeTurnLog(log.payload, battle, currentUserId)}
+                        {describeTurnLog(log.payload, names)}
                       </p>
                       <div
                         className={`grid transition-[grid-template-rows] duration-300 ease-out ${

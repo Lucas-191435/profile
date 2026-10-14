@@ -77,13 +77,16 @@ export interface IUserTest {
 
 // Confirmado 1:1 com battle-engine.service.ts (TurnLogEntry) no backend.
 export type TurnLogEntry =
-  | { event: "switch"; participantId: string; battlePokemonId: string }
+  // `forced` = troca por desmaio do titular; ausente em logs gravados antes do campo existir.
+  | { event: "switch"; participantId: string; battlePokemonId: string; forced?: boolean }
   | { event: "forfeit"; participantId: string }
   | { event: "move-failed"; participantId: string; moveId: string; reason: "no-pp" | "invalid-target" }
   | {
       event: "move";
       participantId: string;
       moveId: string;
+      // Ausente em logs gravados antes do campo existir — cair no damage_class do próprio move.
+      damageClass?: "physical" | "special" | "status" | null;
       targetParticipantId: string;
       targetBattlePokemonId: string;
       missed: boolean;
@@ -153,6 +156,12 @@ export interface TurnResolvedEvent {
   turnNumber: number;
   log: TurnLogEntry[];
   forcedSwitchParticipantIds: string[];
+}
+
+// Emitido quando um humano resolve a troca forçada — `log` traz o "switch" (forced) pra animar.
+export interface ForcedSwitchResolvedEvent {
+  participantId: string;
+  log: TurnLogEntry[];
 }
 
 export interface ForcedSwitchRequiredEvent {

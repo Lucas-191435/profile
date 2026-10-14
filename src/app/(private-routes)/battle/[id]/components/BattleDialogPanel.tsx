@@ -9,6 +9,8 @@ interface BattleDialogPanelProps {
   moves: IBattlePokemonMove[];
   selectedMoveIdx: number | null;
   onSelectMove: (idx: number) => void;
+  // Presente enquanto a playback narra o turno — clicar no diálogo adianta pra próxima etapa.
+  onAdvance?: () => void;
 }
 
 export function BattleDialogPanel({
@@ -18,13 +20,26 @@ export function BattleDialogPanel({
   moves,
   selectedMoveIdx,
   onSelectMove,
+  onAdvance,
 }: BattleDialogPanelProps) {
   return (
-    <div className="bg-[#3858a0] border-4 border-[#c8a038] border-r-0 min-h-[100px] sm:min-h-[130px] md:min-h-[160px] p-3 sm:p-4 md:p-5 flex items-center">
+    <div
+      onClick={onAdvance}
+      className={`relative bg-[#3858a0] border-4 border-[#c8a038] border-r-0 min-h-[100px] sm:min-h-[130px] md:min-h-[160px] p-3 sm:p-4 md:p-5 flex items-center ${
+        onAdvance ? "cursor-pointer select-none" : ""
+      }`}
+    >
       {menuView === "main" ? (
-        <p className="font-display text-sm sm:text-base md:text-xl text-white leading-relaxed">
-          {dialogText || `O que ${activePokemonName} deve fazer?`}
-        </p>
+        <>
+          <p className="font-display text-sm sm:text-base md:text-xl text-white leading-relaxed">
+            {dialogText || `O que ${activePokemonName} deve fazer?`}
+          </p>
+          {onAdvance && (
+            <span className="absolute bottom-2 right-3 text-white/80 text-xs animate-bounce" aria-hidden>
+              ▼
+            </span>
+          )}
+        </>
       ) : (
         <div className="grid grid-cols-2 gap-1.5 sm:gap-2 w-full">
           {moves.map((m, i) => {

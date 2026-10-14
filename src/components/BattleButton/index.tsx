@@ -20,6 +20,7 @@ import { useMyPokemon } from "@/services/queries/useMyPokemon";
 import { useCreateBattle, useListBattle } from "@/services/queries/useBattle";
 import type { BattleStatus } from "@/types/IBattle";
 import Link from "next/link";
+import { useOpenBattleRooms } from "@/hooks/useOpenBattleRooms";
 
 type TeamWithName = Team & { teamName: TeamName };
 
@@ -41,8 +42,19 @@ function extractBattleId(input: string): string | null {
   return trimmed;
 }
 
+const OPEN_BATTLE_DIALOG_EVENT = "open-battle-dialog";
+
+/**
+ * Abre o diálogo de batalha do header a partir de qualquer lugar da tela (ex.: card da home),
+ * sem duplicar o fluxo de criar/entrar em sala.
+ */
+export function openBattleDialog(step: "choice" | "join" = "choice") {
+  window.dispatchEvent(new CustomEvent<Step>(OPEN_BATTLE_DIALOG_EVENT, { detail: step }));
+}
+
 export function BattleButton() {
   const { data: pokemonList, isLoading, error } = useMyPokemon({ enabled: true });
+  const { count: openRoomsCount } = useOpenBattleRooms();
   const router = useRouter();
   const createBattle = useCreateBattle();
   const [open, setOpen] = useState(false);
@@ -56,6 +68,18 @@ export function BattleButton() {
   const { data: battleRooms, isLoading: isLoadingBattleRooms } = useListBattle({
     enabled: open && step === "join",
   });
+
+  useEffect(() => {
+    const handleOpen = (event: Event) => {
+      setStep((event as CustomEvent<Step>).detail ?? "choice");
+      setSelectedIdx(null);
+      setJoinUrl("");
+      setJoinError(null);
+      setOpen(true);
+    };
+    window.addEventListener(OPEN_BATTLE_DIALOG_EVENT, handleOpen);
+    return () => window.removeEventListener(OPEN_BATTLE_DIALOG_EVENT, handleOpen);
+  }, []);
 
   useEffect(() => {
         if (pokemonList) {
@@ -137,10 +161,25 @@ export function BattleButton() {
         onClick={handleClick}
         data-tour="btn-battle"
         size="sm"
-        className="bg-primary hover:bg-primary/90 text-primary-foreground font-display tracking-wider gap-2 glow-red"
+        aria-label={openRoomsCount > 0 ? `Batalha — ${openRoomsCount} salas esperando desafiante` : "Batalha"}
+        className="relative overflow-hidden bg-primary hover:bg-primary/90 text-primary-foreground font-display tracking-wider gap-2 glow-red animate-pulse-glow motion-reduce:animate-none"
       >
-        <Swords className="w-4 h-4" />
+        {/* Brilho que atravessa o botão de tempos em tempos. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 skew-x-[-20deg] bg-white/30 animate-battle-shine motion-reduce:hidden"
+        />
+        <Swords className="w-4 h-4 animate-swords-wiggle motion-reduce:animate-none" />
         Batalha
+        {openRoomsCount > 0 && (
+          <span className="flex items-center gap-1 rounded-full bg-white/20 px-1.5 text-[10px] leading-4">
+            <span className="relative flex size-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex size-1.5 rounded-full bg-white" />
+            </span>
+            {openRoomsCount}
+          </span>
+        )}
       </Button>
 
       {/* Warning: no team */}
@@ -160,7 +199,7 @@ export function BattleButton() {
               Cancelar
             </Button>
             <Link
-              href="/meu-pokemon"
+              href="/client/my-pokemon"
               onClick={() => {
                 setWarnOpen(false);
               }}

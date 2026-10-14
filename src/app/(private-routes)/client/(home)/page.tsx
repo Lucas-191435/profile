@@ -1,6 +1,7 @@
 'use client';
 import ContainerSidebar from "@/components/shared/ContainerSidebar";
 import Hero from "./ui/Hero";
+import { BattleSpotlight } from "./ui/BattleSpotlight";
 import { Button } from "@/components/ui/button";
 import Filter from "./ui/Filters";
 import { usePokemonContext } from "@/context/PokemonContext";
@@ -17,6 +18,7 @@ const ClientHomePage = () => {
 
     <ContainerSidebar className="space-y-6">
       <Hero />
+      <BattleSpotlight />
       <Filter />
       <PokemonGrid />
       <PaginationControls />

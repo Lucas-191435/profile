@@ -8,6 +8,8 @@ interface BattleActionsPanelProps {
   moves: IBattlePokemonMove[];
   selectedMoveIdx: number | null;
   locked: boolean;
+  // Texto mostrado enquanto travado; null = travado sem aviso (ex.: durante a narração do turno).
+  lockedMessage?: string | null;
   onOpenAttacks: () => void;
   onOpenBag: () => void;
   onOpenPokemon: () => void;
@@ -21,6 +23,7 @@ export function BattleActionsPanel({
   moves,
   selectedMoveIdx,
   locked,
+  lockedMessage = "AGUARDANDO O TURNO SER RESOLVIDO...",
   onOpenAttacks,
   onOpenBag,
   onOpenPokemon,
@@ -66,9 +69,9 @@ export function BattleActionsPanel({
           </ActionButton>
         </div>
       )}
-      {locked && (
+      {locked && lockedMessage && (
         <p className="text-center font-display text-[10px] text-muted-foreground tracking-widest pt-2">
-          AGUARDANDO O TURNO SER RESOLVIDO...
+          {lockedMessage}
         </p>
       )}
     </div>

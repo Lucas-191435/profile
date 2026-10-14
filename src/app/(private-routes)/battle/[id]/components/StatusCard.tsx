@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { StatKey, StatusCondition } from "@/types/IBattle";
+import { CardEffect } from "../lib/battlePlayback";
 
-export type StatusCardEffect =
-  | { kind: "status"; status: StatusCondition; variant: "applied" | "cured" }
-  | { kind: "stat"; stat: StatKey; stages: number }
-  | { kind: "heal"; amount: number };
+export type StatusCardEffect = CardEffect;
 
 interface StatusCardProps {
   name: string;
@@ -14,6 +12,8 @@ interface StatusCardProps {
   showHpNumbers?: boolean;
   align: "left" | "right";
   statusCondition?: StatusCondition;
+  // Estágios de stat atuais — viram chips fixos ("ATQ +2") enquanto forem diferentes de zero.
+  statStages?: Record<string, number>;
   effect?: StatusCardEffect | null;
   effectKey?: number;
   isBot?: boolean;
@@ -59,6 +59,22 @@ const STAT_LABELS: Record<StatKey, string> = {
   evasion: "EVAS.",
 };
 
+const STAT_CHIP_LABELS: Record<StatKey, string> = {
+  atk: "ATQ",
+  def: "DEF",
+  spAtk: "AT.E",
+  spDef: "DF.E",
+  speed: "VEL",
+  accuracy: "PRE",
+  evasion: "EVA",
+};
+
+const FLOAT_TONE_COLOR: Record<Extract<StatusCardEffect, { kind: "float" }>["tone"], string> = {
+  damage: "#d83028",
+  miss: "#606070",
+  immune: "#606070",
+};
+
 // Interpola suavemente entre o valor de HP anterior e o novo via requestAnimationFrame — sem
 // isso, a barra e o número pulam direto pro valor final assim que o snapshot chega.
 function useAnimatedNumber(target: number, duration = 600) {
@@ -98,6 +114,7 @@ export function StatusCard({
   showHpNumbers,
   align,
   statusCondition,
+  statStages,
   effect,
   effectKey,
   isBot,
@@ -117,7 +134,11 @@ export function StatusCard({
   const statusBadge = statusCondition && statusCondition !== "NONE" ? STATUS_BADGE[statusCondition] : null;
   const isStatusFlash = effect?.kind === "status" && effect.variant === "applied";
   const isCureFlash = effect?.kind === "status" && effect.variant === "cured";
-  const flashColor = isStatusFlash && statusCondition && statusCondition !== "NONE" ? STATUS_BADGE[statusCondition].color : undefined;
+  // Cor vem do evento, não do status exibido — o selo só aparece quando a etapa revela o efeito.
+  const flashColor = isStatusFlash && effect.status !== "NONE" ? STATUS_BADGE[effect.status].color : undefined;
+  const statChips = statStages
+    ? (Object.keys(STAT_CHIP_LABELS) as StatKey[]).filter((stat) => (statStages[stat] ?? 0) !== 0)
+    : [];
 
   return (
     <div
@@ -141,6 +162,16 @@ export function StatusCard({
           className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap font-display text-[10px] font-bold text-[#38a828] animate-float-up-fade pointer-events-none"
         >
           +{effect.amount} HP
+        </div>
+      )}
+      {effect?.kind === "float" && (
+        <div
+          key={effectKey}
+          className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap font-display text-[12px] sm:text-[14px] font-black animate-float-up-fade pointer-events-none [text-shadow:1px_1px_0_#fff]"
+          // fill-mode both: fica invisível (1º keyframe) durante o atraso, em vez de piscar antes.
+          style={{ color: FLOAT_TONE_COLOR[effect.tone], animationDelay: `${effect.delayMs ?? 0}ms`, animationFillMode: "both" }}
+        >
+          {effect.text}
         </div>
       )}
 
@@ -177,6 +208,22 @@ export function StatusCard({
       {showHpNumbers && (
         <div className="text-right font-display text-[9px] sm:text-[10px] text-[#303030] mt-0.5">
           {Math.round(animatedHp)}/{hpMax}
+        </div>
+      )}
+      {statChips.length > 0 && (
+        <div className={`flex flex-wrap gap-[3px] mt-1 ${align === "right" ? "justify-end" : "justify-start"}`}>
+          {statChips.map((stat) => {
+            const stage = statStages?.[stat] ?? 0;
+            return (
+              <span
+                key={stat}
+                className="font-display text-[8px] sm:text-[9px] font-black px-1 py-[1px] rounded-sm text-white"
+                style={{ backgroundColor: stage > 0 ? "#38a828" : "#d83028" }}
+              >
+                {STAT_CHIP_LABELS[stat]} {stage > 0 ? `+${stage}` : stage}
+              </span>
+            );
+          })}
         </div>
       )}
       {team && team.length > 0 && (

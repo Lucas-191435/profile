@@ -9,8 +9,8 @@ import { useBattleSocket } from "@/hooks/useBattleSocket";
 import { useBattleSnapshot, useCreateBattle, useJoinBattle, useJoinBattleBot } from "@/services/queries/useBattle";
 import {
   BattleUpdatedEvent,
+  ForcedSwitchResolvedEvent,
   IBattle,
-  IBattlePokemon,
   IBattleParticipant,
   IBattleTurnLog,
   OpponentActionSubmittedEvent,
@@ -20,6 +20,21 @@ import {
   TurnResolvedEvent,
 } from "@/types/IBattle";
 import { errorToast } from "@/utils/toasts";
+import {
+  buildPlaybackSteps,
+  displayedBattleAt,
+  PlaybackStep,
+} from "@/app/(private-routes)/battle/[id]/lib/battlePlayback";
+
+// Turno (ou lote de eventos) sendo tocado na cena. `base` é o snapshot de ANTES do primeiro evento
+// da fila — a cena mostra `base` + efeitos das etapas já tocadas, nunca o snapshot final direto.
+interface TurnPlayback {
+  base: IBattle;
+  entries: TurnLogEntry[];
+  // Refetches ainda em voo: a playback não termina antes deles, senão a cena voltaria a mostrar o
+  // snapshot de antes do turno ao trocar pro snapshot "real".
+  pendingSyncs: number;
+}
 
 /** Backend não devolve um formato único de erro no ack do WS — ver docs/battle-frontend-plan-v2.md §2. */
 function extractSocketErrorMessage(err: unknown): string {
@@ -40,40 +55,6 @@ function isSocketErrorResponse(response: unknown): boolean {
   if (typeof anyRes.message !== "string") return false;
   // respostas de sucesso conhecidas (snapshot, participant, {received:true}) sempre têm um desses campos.
   return !("id" in anyRes) && !("received" in anyRes);
-}
-
-// Se o evento derrubou o Pokémon ativo de algum participante, devolve o id desse participante —
-// usado pra saber quem precisa ter o slot ativo congelado até a troca aparecer na fila (ver
-// handleTurnResolved), mesmo quando o evento "switch" correspondente só chega num turno-resolved
-// seguinte (ex.: o adversário venceu a troca forçada e ainda precisa escolher o substituto).
-function getFaintedParticipantId(entry: TurnLogEntry): string | null {
-  switch (entry.event) {
-    case "move":
-      return entry.targetFainted ? entry.targetParticipantId : null;
-    case "confusion-hit":
-    case "status-tick":
-    case "recoil":
-      return entry.targetFainted ? entry.participantId : null;
-    default:
-      return null;
-  }
-}
-
-// Extrai o efeito de HP (se houver) de um evento de log — unifica dano (positivo) e cura
-// (negativo, pra manter a barra "baixa" até a animação de heal revelar o valor real).
-function getHpEffect(entry: TurnLogEntry): { battlePokemonId: string; delta: number } | null {
-  switch (entry.event) {
-    case "move":
-      return entry.missed ? null : { battlePokemonId: entry.targetBattlePokemonId, delta: entry.damage };
-    case "confusion-hit":
-    case "status-tick":
-    case "recoil":
-      return { battlePokemonId: entry.battlePokemonId, delta: entry.damage };
-    case "heal":
-      return { battlePokemonId: entry.battlePokemonId, delta: -entry.amount };
-    default:
-      return null;
-  }
 }
 
 function emitWithAck<T>(socket: Socket, event: string, payload: unknown, timeoutMs = 10000): Promise<T> {
@@ -107,23 +88,17 @@ interface BattleContextType {
   myParticipant: IBattleParticipant | null;
   opponentParticipant: IBattleParticipant | null;
   lastLog: IBattleTurnLog[];
-  // Fila ordenada dos eventos do turno recém-resolvido (mesma ordem de execução do backend),
-  // consumida item a item para tocar a animação/diálogo de cada ataque em sequência.
-  activeTurnEvent: TurnLogEntry | null;
-  // Incrementa a cada novo evento no topo da fila — usado como React key pra reiniciar
-  // animações transitórias (flash de status, seta de stat, +HP de heal) a cada ocorrência.
-  activeTurnEventSeq: number;
-  advanceTurnEvent: () => void;
-  // HP "exibido" ainda soma o dano dos eventos da fila que não terminaram de tocar — o snapshot
-  // já chega com o HP final do turno inteiro, então sem isso a barra pularia pro valor final
-  // assim que o turno resolve, antes mesmo do shake do golpe que causou aquele dano.
-  getDisplayHp: (battlePokemonId: string, actualHp: number, maxHp: number) => number;
-  // Enquanto a troca de Pokémon (evento "switch") de um participante ainda não chegou na frente
-  // da fila de eventos do turno, mostra o Pokémon que estava ativo ANTES do turno em vez do que
-  // já veio trocado no snapshot — sem isso o Pokémon novo aparece (com animação de entrada) antes
-  // mesmo do golpe que derrubou o anterior terminar de tocar, já que o snapshot pós-turno chega
-  // com o `activeSlot` já apontando pro substituto (o backend resolve a troca do bot inline).
-  getDisplayActivePokemon: (participant: IBattleParticipant | null) => IBattlePokemon | null;
+  // O que a cena deve desenhar (HP, desmaio, status, stats, Pokémon ativo): durante a playback, o
+  // snapshot de antes do turno + efeitos das etapas já tocadas; fora dela, o próprio `battle`.
+  displayBattle: IBattle | null;
+  isPlayingTurn: boolean;
+  // Etapa em exibição (texto do diálogo + animações) e um contador que muda a cada etapa — usado
+  // como key pra reiniciar animações mesmo quando duas etapas seguidas são do mesmo tipo.
+  activeStep: PlaybackStep | null;
+  activeStepSeq: number;
+  skipStep: () => void;
+  // Turno a partir do qual o histórico ainda não deve mostrar nada (seria spoiler da playback).
+  playbackFromTurn: number | null;
   mySubmitted: boolean;
   opponentSubmitted: boolean;
   readyParticipantIds: Set<string>;
@@ -160,13 +135,10 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [mySubmittedForTurn, setMySubmittedForTurn] = useState<number | null>(null);
   const [opponentSubmittedForTurn, setOpponentSubmittedForTurn] = useState<number | null>(null);
   const [iForfeited, setIForfeited] = useState(false);
-  // participantId -> { slot de ANTES do turno, evento que libera o congelamento } — enquanto
-  // congelado, mostra esse slot antigo em vez do `activeSlot` já trocado no snapshot (ver
-  // comentário de getDisplayActivePokemon abaixo e de handleTurnResolved sobre o releaseEntry).
-  const [frozenActiveSlot, setFrozenActiveSlot] = useState<Record<string, { slot: number; releaseEntry: TurnLogEntry }>>(
-    {},
-  );
-  const [turnEventQueue, setTurnEventQueue] = useState<TurnLogEntry[]>([]);
+  const [playback, setPlayback] = useState<TurnPlayback | null>(null);
+  // Quantas etapas da playback já terminaram, e se os efeitos da etapa atual já valem na cena.
+  const [stepCursor, setStepCursor] = useState(0);
+  const [stepRevealed, setStepRevealed] = useState(false);
   const [lastBattleId, setLastBattleId] = useState(battleId);
   const battleRef = useRef<IBattle | null>(null);
 
@@ -212,8 +184,8 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   if (battleId !== lastBattleId) {
     setLastBattleId(battleId);
     if (readyParticipantIds.size > 0) setReadyParticipantIds(new Set());
-    if (turnEventQueue.length > 0) setTurnEventQueue([]);
-    if (Object.keys(frozenActiveSlot).length > 0) setFrozenActiveSlot({});
+    if (playback) setPlayback(null);
+    if (stepCursor !== 0) setStepCursor(0);
   }
 
   // Chave da última sala que este socket (socket.id muda a cada reconexão) confirmou ter
@@ -233,6 +205,19 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // de novo — não precisa travar nem redirecionar o usuário por causa disso.
     }
   }, [battleId, socket, setSnapshot]);
+
+  // O gateway só sabe em qual batalha este socket está depois de um "join-battle" bem-sucedido —
+  // qualquer ação antes disso volta com 'Entre na batalha com "join-battle" antes.'. Isso acontece
+  // quando o usuário chega direto na escolha do líder (desafio rápido da home já cria a sala e
+  // chama o bot antes de navegar) e clica antes da rede de segurança abaixo terminar de entrar na
+  // sala. Então toda ação garante a entrada primeiro (join-battle é idempotente no backend).
+  const ensureJoined = useCallback(async () => {
+    if (joinedRoomKeyRef.current === `${socket.id}:${battleId}`) return;
+    await joinRoom();
+    if (joinedRoomKeyRef.current !== `${socket.id}:${battleId}`) {
+      throw new Error("Ainda conectando à batalha. Tente de novo em instantes.");
+    }
+  }, [socket, battleId, joinRoom]);
 
   // No connect inicial e em toda reconexão, reentra na sala e repopula o estado do zero — mas
   // só se o usuário JÁ for um participante confirmado desta batalha (checa `battleRef.current`,
@@ -295,10 +280,31 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [connected, battle, currentUserId, socket, battleId, joinRoom]);
 
   useEffect(() => {
+    // Enfileira um lote de eventos na playback e busca o snapshot novo em paralelo. A base é o
+    // snapshot de antes do lote (`battleRef.current` ainda não foi atualizado pelo refetch); se já
+    // houver uma playback tocando, o lote só entra no fim da fila e a base continua a mesma.
+    const enqueuePlayback = async (log: TurnLogEntry[]) => {
+      const preBatchBattle = battleRef.current;
+      if (!preBatchBattle || log.length === 0) {
+        await refetch();
+        return;
+      }
+      setPlayback((prev) =>
+        prev
+          ? { ...prev, entries: [...prev.entries, ...log], pendingSyncs: prev.pendingSyncs + 1 }
+          : { base: preBatchBattle, entries: log, pendingSyncs: 1 },
+      );
+      await refetch();
+      setPlayback((prev) => (prev ? { ...prev, pendingSyncs: Math.max(0, prev.pendingSyncs - 1) } : prev));
+    };
+
     const handleBattleUpdated = (event: BattleUpdatedEvent) => {
       if ("ready" in event) {
         setReadyParticipantIds((prev) => new Set(prev).add(event.participantId));
       }
+      // Logo em seguida chega "forced-switch-resolved", que já faz o refetch junto com a playback
+      // da troca — refazer aqui faria o substituto aparecer antes da etapa "enviou X!".
+      if ("forcedSwitchResolved" in event) return;
       void refetch();
     };
 
@@ -308,68 +314,14 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
 
-    const handleTurnResolved = async (event: TurnResolvedEvent) => {
-      // Congela o Pokémon ativo ATUAL (pré-turno) de todo participante que troca neste turno, OU
-      // cujo Pokémon ativo desmaiou neste turno — precisa ser lido de `battleRef.current` (o
-      // snapshot de ANTES desse turno) porque o refetch logo abaixo já vai trazer o `activeSlot`
-      // pós-troca (o backend resolve a troca do bot inline, então ela já chega pronta no mesmo
-      // snapshot do turno que a causou). Sem isso o Pokémon novo entraria em cena assim que o
-      // refetch resolvesse, antes do golpe que derrubou o anterior sequer começar a tocar.
-      // Cada congelamento guarda o evento (`releaseEntry`) que deve liberá-lo: se houver um
-      // "switch" neste mesmo lote, libera assim que ele virar o topo da fila (o substituto entra
-      // junto com a animação de troca). Se não houver — ex.: o time humano ainda precisa escolher
-      // o substituto na troca forçada, e o "switch" só chega num turn-resolved seguinte — libera
-      // assim que o PRÓPRIO evento de desmaio terminar de tocar, sem depender de um switch que
-      // pode nunca aparecer (senão o Pokémon desmaiado fica preso na tela pra sempre).
-      const preTurnBattle = battleRef.current;
-      const switchEntryByParticipant = new Map<string, Extract<TurnLogEntry, { event: "switch" }>>();
-      for (const entry of event.log) {
-        if (entry.event === "switch") switchEntryByParticipant.set(entry.participantId, entry);
-      }
-      const releaseEntryByParticipant = new Map<string, TurnLogEntry>();
-      for (const entry of event.log) {
-        const faintedParticipantId = getFaintedParticipantId(entry);
-        if (faintedParticipantId && !releaseEntryByParticipant.has(faintedParticipantId)) {
-          releaseEntryByParticipant.set(faintedParticipantId, entry);
-        }
-      }
-      for (const [participantId, switchEntry] of switchEntryByParticipant) {
-        releaseEntryByParticipant.set(participantId, switchEntry);
-      }
-      if (releaseEntryByParticipant.size > 0) {
-        setFrozenActiveSlot((prev) => {
-          const next = { ...prev };
-          let changed = false;
-          for (const [participantId, releaseEntry] of releaseEntryByParticipant) {
-            const existing = next[participantId];
-            if (existing) {
-              // Já congelado por um lote anterior (desmaio sem switch ainda) — se este lote trouxe
-              // o switch, troca o gatilho de liberação pra ele em vez do desmaio original.
-              if (releaseEntry.event === "switch" && existing.releaseEntry !== releaseEntry) {
-                next[participantId] = { ...existing, releaseEntry };
-                changed = true;
-              }
-              continue;
-            }
-            const participant = preTurnBattle?.participants.find((p) => p.id === participantId);
-            if (participant) {
-              next[participantId] = { slot: participant.activeSlot, releaseEntry };
-              changed = true;
-            }
-          }
-          return changed ? next : prev;
-        });
-      }
+    // event.log preserva a ordem de execução decidida pelo backend (prioridade do golpe +
+    // velocidade) — inclusive a troca forçada do bot, que vem no fim, depois do desmaio.
+    const handleTurnResolved = (event: TurnResolvedEvent) => {
+      void enqueuePlayback(event.log);
+    };
 
-      // Espera o snapshot com o HP final do turno chegar ANTES de empilhar os eventos na fila:
-      // getDisplayHp soma o dano pendente da fila em cima do `actualHp` do snapshot, então se a
-      // fila fosse preenchida antes do refetch resolver, esse `actualHp` ainda seria o do turno
-      // anterior — a soma estouraria o HP real e a barra saltaria pra cima antes de cair de volta
-      // assim que o refetch chegasse.
-      await refetch();
-      // event.log preserva a ordem de execução decidida pelo backend (prioridade do golpe +
-      // velocidade) — é a partir dela que a UI sabe quem atacou primeiro para animar em sequência.
-      setTurnEventQueue((prev) => [...prev, ...event.log]);
+    const handleForcedSwitchResolved = (event: ForcedSwitchResolvedEvent) => {
+      void enqueuePlayback(event.log);
     };
 
     const handleForcedSwitchRequired = () => {
@@ -387,6 +339,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     socket.on("battle-updated", handleBattleUpdated);
     socket.on("opponent-action-submitted", handleOpponentActionSubmitted);
     socket.on("turn-resolved", handleTurnResolved);
+    socket.on("forced-switch-resolved", handleForcedSwitchResolved);
     socket.on("forced-switch-required", handleForcedSwitchRequired);
     socket.on("battle-ended", handleBattleEnded);
     socket.on("exception", handleException);
@@ -395,6 +348,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       socket.off("battle-updated", handleBattleUpdated);
       socket.off("opponent-action-submitted", handleOpponentActionSubmitted);
       socket.off("turn-resolved", handleTurnResolved);
+      socket.off("forced-switch-resolved", handleForcedSwitchResolved);
       socket.off("forced-switch-required", handleForcedSwitchRequired);
       socket.off("battle-ended", handleBattleEnded);
       socket.off("exception", handleException);
@@ -436,6 +390,7 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const selectLead = useCallback(
     async (battlePokemonId: string) => {
       try {
+        await ensureJoined();
         await emitWithAck(socket, "select-lead", { battlePokemonId });
         await refetch();
       } catch (err) {
@@ -443,11 +398,12 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         throw err;
       }
     },
-    [socket, refetch],
+    [socket, refetch, ensureJoined],
   );
 
   const ready = useCallback(async () => {
     try {
+      await ensureJoined();
       await emitWithAck(socket, "ready", {});
       if (myParticipant) {
         setReadyParticipantIds((prev) => new Set(prev).add(myParticipant.id));
@@ -456,18 +412,18 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       errorToast({ description: extractSocketErrorMessage(err) });
       throw err;
     }
-  }, [socket, myParticipant]);
+  }, [socket, myParticipant, ensureJoined]);
 
   const submitAction = useCallback(
     async (payload: SubmitActionPayload) => {
       // Troca forçada não avança o turno (só a resolução normal faz isso), então não
-      // deve travar o painel de ações via mySubmitted — só o refetch já resolve a UI.
+      // deve travar o painel de ações via mySubmitted — o evento "forced-switch-resolved" que o
+      // servidor emite em seguida já toca a entrada do substituto e faz o refetch.
       const isForcedSwitch = myParticipant?.turnState === "WAITING_FORCED_SWITCH";
       try {
+        await ensureJoined();
         await emitWithAck(socket, "submit-action", payload);
-        if (isForcedSwitch) {
-          void refetch();
-        } else if (battle) {
+        if (!isForcedSwitch && battle) {
           setMySubmittedForTurn(battle.turnNumber);
         }
       } catch (err) {
@@ -475,86 +431,49 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         throw err;
       }
     },
-    [socket, myParticipant, refetch, battle],
+    [socket, myParticipant, battle, ensureJoined],
   );
 
-  const activeTurnEvent = turnEventQueue[0] ?? null;
+  const myParticipantId = myParticipant?.id ?? null;
 
-  const advanceTurnEvent = useCallback(() => {
-    setTurnEventQueue((prev) => prev.slice(1));
+  // Etapas derivadas da fila inteira (base + todos os eventos enfileirados). Recalcular ao chegar um
+  // lote novo é seguro: é determinístico, então as etapas já tocadas continuam idênticas.
+  const steps = useMemo(
+    () => (playback ? buildPlaybackSteps(playback.base, playback.entries, myParticipantId) : []),
+    [playback, myParticipantId],
+  );
+  const activeStep = playback ? steps[stepCursor] ?? null : null;
+
+  const displayBattle = useMemo(() => {
+    if (!playback) return battle ?? null;
+    return displayedBattleAt(playback.base, steps, stepCursor, stepRevealed);
+  }, [playback, battle, steps, stepCursor, stepRevealed]);
+
+  const skipStep = useCallback(() => {
+    setStepCursor((c) => c + 1);
+    setStepRevealed(false);
   }, []);
 
-  // Marca quando o efeito de HP do evento atualmente em exibição já pode "aparecer" na barra —
-  // fica false de novo assim que o próximo evento vira o topo da fila.
-  const [headDamageRevealed, setHeadDamageRevealed] = useState(false);
-  // eventSeq muda a cada evento novo no topo da fila — usado pelo front pra forçar reinício das
-  // animações transitórias (flash de status, seta de stat, +HP de heal) mesmo quando o mesmo tipo
-  // de evento se repete em sequência.
-  const [eventSeq, setEventSeq] = useState(0);
-  // Mesmo padrão de "ajuste de estado durante o render" usado acima pro reset de battleId —
-  // evita o efeito extra de só resetar quando activeTurnEvent mudar.
-  const [prevActiveTurnEvent, setPrevActiveTurnEvent] = useState<TurnLogEntry | null>(null);
-  if (activeTurnEvent !== prevActiveTurnEvent) {
-    const leavingTurnEvent = prevActiveTurnEvent;
-    setPrevActiveTurnEvent(activeTurnEvent);
-    if (headDamageRevealed) setHeadDamageRevealed(false);
-    setEventSeq((s) => s + 1);
-    // Libera o congelamento de qualquer participante cujo `releaseEntry` (definido em
-    // handleTurnResolved) seja o evento que ACABOU de virar o topo da fila (caso "switch": o
-    // substituto entra em cena junto com a animação de troca) ou o evento que a fila ACABOU de
-    // deixar pra trás (caso desmaio sem switch em vista: libera só depois da animação de desmaio
-    // terminar de tocar, sem depender de um switch que pode nunca chegar).
-    setFrozenActiveSlot((prev) => {
-      let next: typeof prev | null = null;
-      for (const [participantId, frozen] of Object.entries(prev)) {
-        const releasedByArrival = activeTurnEvent?.event === "switch" && frozen.releaseEntry === activeTurnEvent;
-        const releasedByDeparture = frozen.releaseEntry === leavingTurnEvent;
-        if (releasedByArrival || releasedByDeparture) {
-          if (!next) next = { ...prev };
-          delete next[participantId];
-        }
-      }
-      return next ?? prev;
-    });
-  }
-
+  // Revela os efeitos da etapa no instante certo e avança sozinho ao fim dela (clicar no diálogo
+  // chama skipStep e adianta). `stepCursor` entra nas deps pra reiniciar os timers a cada etapa.
   useEffect(() => {
-    if (!activeTurnEvent || !getHpEffect(activeTurnEvent)) return;
-    // Só revela o efeito depois que a animação de shake (attack-shake, 0.6s x2 = 1.2s) termina.
-    const timer = setTimeout(() => setHeadDamageRevealed(true), 1200);
-    return () => clearTimeout(timer);
-  }, [activeTurnEvent]);
+    if (!activeStep) return;
+    const revealTimer = setTimeout(() => setStepRevealed(true), activeStep.revealAtMs);
+    const advanceTimer = setTimeout(skipStep, activeStep.durationMs);
+    return () => {
+      clearTimeout(revealTimer);
+      clearTimeout(advanceTimer);
+    };
+  }, [activeStep, stepCursor, skipStep]);
 
-  // Soma quanto o HP de cada Pokémon ainda não deve refletir na barra: o delta (dano positivo ou
-  // cura negativa) de todos os eventos que ainda estão na fila, exceto o do topo depois que sua
-  // animação já tiver terminado.
-  const pendingDamageByPokemon = useMemo(() => {
-    const map: Record<string, number> = {};
-    turnEventQueue.forEach((entry, idx) => {
-      const effect = getHpEffect(entry);
-      if (!effect) return;
-      if (idx === 0 && headDamageRevealed) return;
-      map[effect.battlePokemonId] = (map[effect.battlePokemonId] ?? 0) + effect.delta;
-    });
-    return map;
-  }, [turnEventQueue, headDamageRevealed]);
-
-  const getDisplayHp = useCallback(
-    (battlePokemonId: string, actualHp: number, maxHp: number) => {
-      const pending = pendingDamageByPokemon[battlePokemonId] ?? 0;
-      return Math.max(0, Math.min(maxHp, actualHp + pending));
-    },
-    [pendingDamageByPokemon],
-  );
-
-  const getDisplayActivePokemon = useCallback(
-    (participant: IBattleParticipant | null) => {
-      if (!participant) return null;
-      const slot = frozenActiveSlot[participant.id]?.slot ?? participant.activeSlot;
-      return participant.pokemons.find((p) => p.position === slot) ?? null;
-    },
-    [frozenActiveSlot],
-  );
+  // Fila tocada até o fim e snapshot novo já chegou → a cena volta a ler o `battle` real (que a
+  // essa altura é igual à base + todos os efeitos, então nada "pula"). Ajuste de estado durante o
+  // render, mesmo padrão do reset de battleId acima.
+  if (playback && stepCursor >= steps.length && playback.pendingSyncs === 0) {
+    setPlayback(null);
+    setStepCursor(0);
+    setStepRevealed(false);
+  }
 
   const submitMove = useCallback((moveId: string) => submitAction({ type: "MOVE", moveId }), [submitAction]);
   const submitSwitch = useCallback(
@@ -577,11 +496,12 @@ export const BattleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         myParticipant,
         opponentParticipant,
         lastLog,
-        activeTurnEvent,
-        activeTurnEventSeq: eventSeq,
-        advanceTurnEvent,
-        getDisplayHp,
-        getDisplayActivePokemon,
+        displayBattle,
+        isPlayingTurn: !!playback,
+        activeStep,
+        activeStepSeq: stepCursor,
+        skipStep,
+        playbackFromTurn: playback?.base.turnNumber ?? null,
         mySubmitted,
         opponentSubmitted,
         readyParticipantIds,
