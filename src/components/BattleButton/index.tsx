@@ -157,30 +157,40 @@ export function BattleButton() {
 
   return (
     <>
-      <Button
-        onClick={handleClick}
-        data-tour="btn-battle"
-        size="sm"
-        aria-label={openRoomsCount > 0 ? `Batalha — ${openRoomsCount} salas esperando desafiante` : "Batalha"}
-        className="relative overflow-hidden bg-primary hover:bg-primary/90 text-primary-foreground font-display tracking-wider gap-2 glow-red animate-pulse-glow motion-reduce:animate-none"
-      >
-        {/* Brilho que atravessa o botão de tempos em tempos. */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 skew-x-[-20deg] bg-white/30 animate-battle-shine motion-reduce:hidden"
-        />
-        <Swords className="w-4 h-4 animate-swords-wiggle motion-reduce:animate-none" />
-        Batalha
-        {openRoomsCount > 0 && (
-          <span className="flex items-center gap-1 rounded-full bg-white/20 px-1.5 text-[10px] leading-4">
-            <span className="relative flex size-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-white" />
+      {/* No mobile vira só o ícone; o contador sai do botão (que tem overflow-hidden por causa do brilho) e vira badge no canto. */}
+      <div className="relative shrink-0">
+        <Button
+          onClick={handleClick}
+          data-tour="btn-battle"
+          aria-label={openRoomsCount > 0 ? `Batalha — ${openRoomsCount} salas esperando desafiante` : "Batalha"}
+          className="relative overflow-hidden h-10 w-10 p-0 has-[>svg]:px-0 sm:w-auto sm:px-4 sm:has-[>svg]:px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-display tracking-wider gap-2 glow-red animate-pulse-glow motion-reduce:animate-none"
+        >
+          {/* Brilho que atravessa o botão de tempos em tempos. */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 skew-x-[-20deg] bg-white/30 animate-battle-shine motion-reduce:hidden"
+          />
+          <Swords className="size-5 sm:size-4 animate-swords-wiggle motion-reduce:animate-none" />
+          <span className="hidden sm:inline">Batalha</span>
+          {openRoomsCount > 0 && (
+            <span className="hidden sm:flex items-center gap-1 rounded-full bg-white/20 px-1.5 text-[10px] leading-4">
+              <span className="relative flex size-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex size-1.5 rounded-full bg-white" />
+              </span>
+              {openRoomsCount}
             </span>
-            {openRoomsCount}
+          )}
+        </Button>
+        {openRoomsCount > 0 && (
+          <span
+            aria-hidden
+            className="sm:hidden pointer-events-none absolute -top-1.5 -right-1.5 flex min-w-5 h-5 items-center justify-center rounded-full border-2 border-background bg-white px-1 font-display text-[10px] font-bold leading-none text-primary"
+          >
+            {openRoomsCount > 99 ? "99+" : openRoomsCount}
           </span>
         )}
-      </Button>
+      </div>
 
       {/* Warning: no team */}
       <Dialog open={warnOpen} onOpenChange={setWarnOpen}>

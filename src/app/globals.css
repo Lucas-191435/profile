@@ -138,6 +138,12 @@
   h6 {
     font-family: var(--font-display);
   }
+
+  /* Tailwind v4 deixou de aplicar cursor: pointer em botões por padrão */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
 }
 
 @layer utilities {

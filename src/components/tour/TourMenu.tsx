@@ -19,13 +19,13 @@ export const TourMenu = () => {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          className="border-1 m-2 p-1 rounded-sm cursor-pointer"
+          className="size-10 shrink-0 p-0 has-[>svg]:px-0 border-1 rounded-md cursor-pointer"
           aria-label="Tour guiado"
           title="Tour guiado"
           disabled={isRunning}
           data-tour="btn-tour"
         >
-          <Route className="w-6 h-6 text-white" />
+          <Route className="size-5 text-white" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-1">

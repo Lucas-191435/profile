@@ -28,10 +28,11 @@ export function ContentWrapper({ children }: { children: React.ReactNode }) {
       )}
        data-tour="welcome"
     >
-      <div className="min-h-[81px] border-b border-sidebar-border flex items-center justify-end px-4">
+      {/* Todos os itens com size-10 + shrink-0: sem isso o flex esmagava os ícones no mobile. */}
+      <div className="min-h-[81px] border-b border-sidebar-border flex items-center justify-end gap-2 px-4">
         <BattleButton />
         <TourMenu />
-        <Link href="/curriculum" rel="noopener noreferrer" className="border-1 m-2 p-1 rounded-sm cursor-pointer"  data-tour="btn-curriculum">
+        <Link href="/curriculum" rel="noopener noreferrer" className="size-10 shrink-0 flex items-center justify-center border-1 rounded-md cursor-pointer"  data-tour="btn-curriculum">
           <File className="w-6 h-6 text-primary" />
         </Link>
         <SocialLinks />

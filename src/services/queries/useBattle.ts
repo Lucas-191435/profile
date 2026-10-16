@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { api } from "../api";
 import { BattleStatus, IBattle, IUserTest, TeamName } from "@/types/IBattle";
@@ -51,7 +51,24 @@ export const useJoinBattleBot = () => {
     });
 };
 
-export const useTestTrainers = ({ enabled = true }: { enabled?: boolean } = {}) => {
+export const useCancelBattle = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (battleId: string): Promise<{ id: string }> => {
+            const response = await api.delete(`/battle/${battleId}`).request;
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["list-battle"] });
+        },
+        onError: (error: AxiosError<{ message: string }>) => {
+            errorToast({ description: error.response?.data?.message ?? "Erro ao cancelar a sala." });
+        },
+    });
+};
+
+export const useTestTrainers =({ enabled = true }: { enabled?: boolean } = {}) => {
     return useQuery({
         queryKey: ["user-test-trainers"],
         queryFn: async (): Promise<IUserTest[]> => {

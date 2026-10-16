@@ -11,28 +11,38 @@ const SocialLinks = () => {
 
     return (
         <>
-            <div className="bg-white m-2 p-1 rounded-sm cursor-pointer" data-tour="btn-github">
-                <a href="https://github.com/Lucas-191435"
-                    target="_blank" rel="noopener noreferrer">
-                    <Image
-                        src={github}
-                        alt="GitHub"
-                        width={24}
-                        height={24}
-                    />
-                </a>
-            </div>
-            <div className="bg-white m-2 p-1 rounded-sm cursor-pointer" data-tour="btn-linkedin">
-                <a href="https://www.linkedin.com/in/lucas-fer-san/"
-                    target="_blank" rel="noopener noreferrer">
-                    <Image
-                        src={linkedin}
-                        alt="LinkedIn"
-                        width={24}
-                        height={24}
-                    />
-                </a>
-            </div>
+            <a
+                href="https://github.com/Lucas-191435"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+                className="size-10 shrink-0 flex items-center justify-center bg-white rounded-md cursor-pointer"
+                data-tour="btn-github"
+            >
+                <Image
+                    src={github}
+                    alt="GitHub"
+                    width={24}
+                    height={24}
+                    className="size-6 shrink-0"
+                />
+            </a>
+            <a
+                href="https://www.linkedin.com/in/lucas-fer-san/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="size-10 shrink-0 flex items-center justify-center bg-white rounded-md cursor-pointer"
+                data-tour="btn-linkedin"
+            >
+                <Image
+                    src={linkedin}
+                    alt="LinkedIn"
+                    width={24}
+                    height={24}
+                    className="size-6 shrink-0"
+                />
+            </a>
         </>
     );
 };

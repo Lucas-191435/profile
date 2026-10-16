@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from "react";
-import { Bot, Check, Copy, Loader2, Shuffle, Swords, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Bot, Check, Copy, Loader2, Shuffle, Swords, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -9,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { successToast } from "@/utils/toasts";
 import { useBattleContext } from "@/context/BattleContext";
-import { useTestTrainers } from "@/services/queries/useBattle";
+import { useCancelBattle, useTestTrainers } from "@/services/queries/useBattle";
 import { TRAINERS } from "@/utils/trainers";
 
 interface WaitingOpponentScreenProps {
@@ -18,7 +19,9 @@ interface WaitingOpponentScreenProps {
 }
 
 export function WaitingOpponentScreen({ battleId, teamLabel }: WaitingOpponentScreenProps) {
+  const router = useRouter();
   const { joinBattleBot, currentUserId } = useBattleContext();
+  const { mutateAsync: cancelBattle, isPending: isCancelling } = useCancelBattle();
   const [copied, setCopied] = useState(false);
   const [botDialogOpen, setBotDialogOpen] = useState(false);
   const [selectedTrainerId, setSelectedTrainerId] = useState<string | null>(null);
@@ -56,8 +59,30 @@ export function WaitingOpponentScreen({ battleId, teamLabel }: WaitingOpponentSc
     }
   };
 
+  // Sair da sala apaga a batalha no back — senão ela continuaria listada como "aguardando oponente".
+  const handleLeave = async () => {
+    if (isCancelling || isJoiningBot) return;
+    try {
+      await cancelBattle(battleId);
+      router.push("/");
+    } catch {
+      // erro já reportado via toast pelo useCancelBattle
+    }
+  };
+
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center bg-background p-6 overflow-hidden">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleLeave}
+        disabled={isCancelling || isJoiningBot}
+        className="absolute top-6 left-6 z-10"
+      >
+        {isCancelling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
+        Cancelar sala
+      </Button>
+
       {/* Fundo: grade sutil + brilhos */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.07]"
